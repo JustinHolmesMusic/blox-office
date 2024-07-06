@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract PaymentLog {
+contract MagicHat {
     // Struct to hold payment details
     bytes32[] public rabbitHashes;
 

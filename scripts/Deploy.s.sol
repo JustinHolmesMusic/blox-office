@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../lib/forge-std/src/Script.sol";
 import "../contracts/MagicHat.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 
 contract DeployScript is Script {

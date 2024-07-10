@@ -1,5 +1,6 @@
-foundry.toml
+goundry.toml
 cache/
 out/
 broadcast/
 .env
+secret_rabbits.txt

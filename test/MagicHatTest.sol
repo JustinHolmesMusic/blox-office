@@ -58,4 +58,36 @@ contract MagicHatTest is Test {
         assertEq(payments[0].amount, 1 ether);
         assertEq(payments[1].amount, 1 ether);
     }
+
+    function testWithdraw() public {
+        // Make a payment to have some funds in the contract
+        vm.deal(address(this), 1 ether);
+        magicHat.makePayment{value: 1 ether}("rabbit1");
+
+        // Withdraw the funds
+        address owner = address(this);
+        uint256 initialBalance = owner.balance;
+
+        // Attempt to withdraw and log any errors
+        // Call the withdraw function as the owner
+        vm.prank(owner);
+        magicHat.withdraw();
+
+        uint256 finalBalance = owner.balance;
+
+        // Check that the funds were withdrawn to the owner
+        assertEq(finalBalance, initialBalance + 1 ether);
+    }
+
+    function testWithdrawUnauthorized() public {
+        // Try to withdraw funds from a non-owner account
+        vm.deal(address(this), 1 ether);
+        magicHat.makePayment{value: 1 ether}("rabbit1");
+
+        // Change the sender to a different address
+        address nonOwner = address(0x1234);
+        vm.prank(nonOwner);
+        vm.expectRevert("Not the contract owner");
+        magicHat.withdraw();
+    }
 }

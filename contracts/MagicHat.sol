@@ -4,9 +4,11 @@ pragma solidity ^0.8.0;
 contract MagicHat {
     // Struct to hold payment details
     bytes32[] public rabbitHashes;
+    address public owner; // Add owner state variable
 
     constructor(bytes32[] memory _rabbitHashes) {
         rabbitHashes = _rabbitHashes;
+        owner = msg.sender; // Initialize owner
     }
 
     struct Payment {
@@ -20,6 +22,12 @@ contract MagicHat {
 
     // Event to log payment details
     event PaymentMade(address indexed payer, uint256 amount, uint256 timestamp);
+
+    // Modifier to restrict access to the owner
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
 
     // Function to make a payment
     function makePayment(string memory secretRabbit) external payable {
@@ -62,5 +70,10 @@ contract MagicHat {
     // Function to get all payments
     function getAllPayments() external view returns (Payment[] memory) {
         return payments;
+    }
+
+    // Function to withdraw Ether from the contract
+    function withdraw() external onlyOwner {
+        payable(owner).transfer(address(this).balance);
     }
 }

@@ -22,6 +22,8 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
     mapping(uint32 => bool[16]) public setColors;
 
 
+
+
     constructor() ERC721("SetStone", "STONE") {}
 
     function mintStone(

@@ -5,9 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract SetStone is ERC721, Ownable, ERC721Enumerable {
-    uint256 public totalSupply;
-
+contract SetStone is ERC721Enumerable {
     struct Stone {
         bytes16 set; // "n:h:s", where n is the ID of the act, h is the blockheight at the beginning of the show, and s is the set number
         uint16 color; // color

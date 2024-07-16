@@ -2,11 +2,11 @@ pragma solidity ^0.8.0;
 
 contract ShowSet {
 
-    mapping (uint32 => Set[]) public sets; // for each show we have a list of sets
+    mapping (bytes16 => Set[]) public sets; // for each show we have a list of sets
 
     struct Set {
-        uint32 show; // blockheight of the show
-        uint8 shape; // 0 = square, 1 = triangle, 2 = circle etc. 
+        bytes16 show; // "n:h", where n is the ID of the act, and h is the blockheight at the beginning of the show
+        uint8 shape; // 0 = diamond, 1 = triangle, 2 = circle etc.
         uint8 order; // 0 = first, 1 = second, 2 = third etc.
         bytes32[] rabbitHashes; // for each show we have a list of rabbit hashes
     }
@@ -23,7 +23,7 @@ contract ShowSet {
     }
 
     function commitSet(
-        uint32 _show,
+        bytes16 _show,
         uint8 _shape,
         uint8 _order,
         bytes32[] memory _rabbitHashes

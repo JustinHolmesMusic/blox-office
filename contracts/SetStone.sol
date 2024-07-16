@@ -8,7 +8,7 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
     uint256 public totalSupply;
 
     struct Stone {
-        uint32 set; // mainnet block height of the time of the show
+        bytes16 set; // "n:h:s", where n is the ID of the act, h is the blockheight at the beginning of the show, and s is the set number
         uint16 color; // color
         string crystalization; // personal message
     }
@@ -20,9 +20,6 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
     // Mapping from set_id to a boolean array representing available colors
     // TODO: what are the default values for the boolean array?
     mapping(uint32 => bool[16]) public setColors;
-
-
-
 
     constructor() ERC721("SetStone", "STONE") {}
 

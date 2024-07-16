@@ -16,8 +16,9 @@ contract SetTest is Test {
         rabbitHashes[0] = keccak256(abi.encodePacked("rabbit1"));
         rabbitHashes[1] = keccak256(abi.encodePacked("rabbit2"));
 
-        ShowSet.Set({
-            show: "1:1234",
+        set_contract.addSet({
+            artist_id: 0,
+            blockheight: 420,
             shape: 0,
             order: 0,
             rabbitHashes: rabbitHashes

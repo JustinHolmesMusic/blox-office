@@ -53,9 +53,4 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
         totalSupply++;
 
     }
-
-    function getStone(uint256 tokenId) public view returns (Stone memory) {
-        require(_exists(tokenId), "Token does not exist");
-        return stones[tokenId];
-    }
 }

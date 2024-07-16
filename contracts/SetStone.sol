@@ -26,7 +26,7 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
 
     function mintStone(
         address to,
-        uint32 _set,
+        bytes16 set_id,
         uint16 _color,
         string memory _crystalization,
         string memory _sticket
@@ -41,12 +41,12 @@ contract SetStone is ERC721, Ownable, ERC721Enumerable {
         // mint the stone
 
         stones.push(Stone({
-            set: _set,
+            set: set_id,
             color: _color,
             crystalization: _crystalization
         }));
 
-        setColors[_mainnetBlockHeight][_color] = true;
+        setColors[set_id][_color] = true;
 
         uint256 tokenId = stones.length - 1;
         _mint(to, tokenId);

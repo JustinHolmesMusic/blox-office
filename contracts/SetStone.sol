@@ -27,7 +27,7 @@ contract SetStone is ERC721Enumerable {
         bytes16 set_id,
         uint16 _color,
         string memory _crystalization,
-        string memory _sticket
+        string memory _rabbit_secret
     ) external payable {
         // check that _set is a valid set
         // check that the payed amount is greater or equal to the stone price for the given set

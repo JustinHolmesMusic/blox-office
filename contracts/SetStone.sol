@@ -18,7 +18,7 @@ contract SetStone is ERC721Enumerable {
 
     // Mapping from set_id to a boolean array representing available colors
     // TODO: what are the default values for the boolean array?
-    mapping(uint32 => bool[16]) public setColors;
+    mapping(bytes16 => bool[16]) public setColors;
 
     constructor() ERC721("SetStone", "STONE") {}
 

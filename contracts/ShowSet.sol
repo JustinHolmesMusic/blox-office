@@ -27,6 +27,10 @@ contract ShowSet {
 
     }
 
+    function getShowIds() public view returns (bytes32[] memory) {
+        return show_ids;
+    }
+
     function getSetForShow(uint16 artist_id, uint64 blockheight, uint8 order) public view returns (Set memory) {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id,
             blockheight));

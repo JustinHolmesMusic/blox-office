@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "./IShowSet.sol";
 
 contract SetStone is ERC721Enumerable {
     struct Stone {
@@ -16,19 +17,25 @@ contract SetStone is ERC721Enumerable {
 
     Stone[] public stones;
 
+    IShowSet public showSet;
+
     // Mapping from set_id to a boolean array representing available colors
     // TODO: what are the default values for the boolean array?
     mapping(bytes16 => bool[16]) public setColors;
 
-    constructor() ERC721("SetStone", "STONE") {}
+    constructor(address showSetAddress) ERC721("SetStone", "STONE") {
+        showSet = IShowSet(showSetAddress);
+    }
 
     function mintStone(
         address to,
-        bytes16 set_id,
+        uint16 artistId,
+        uint64 blockHeight,
         uint16 _color,
         string memory _crystalization,
         string memory _rabbit_secret
     ) external payable {
+
         // check that _set is a valid set
         // check that the payed amount is greater or equal to the stone price for the given set
         // check that the secretRabbit is a valid secret for a given set

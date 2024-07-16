@@ -26,6 +26,7 @@ contract ShowSet {
         bytes16 _show,
         uint8 _shape,
         uint8 _order,
+        uint256 stone_price,
         bytes32[] memory _rabbitHashes
     ) public onlyOwner {
 

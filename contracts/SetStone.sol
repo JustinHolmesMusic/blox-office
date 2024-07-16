@@ -48,7 +48,6 @@ contract SetStone is ERC721Enumerable {
 
         uint256 tokenId = stones.length - 1;
         _mint(to, tokenId);
-        totalSupply++;
 
     }
 }

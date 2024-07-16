@@ -22,6 +22,7 @@ contract ShowSet {
         bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
             blockheight));
 
+        show_ids.push(showBytes);
         sets[showBytes][newSet.order] = newSet;
 
     }

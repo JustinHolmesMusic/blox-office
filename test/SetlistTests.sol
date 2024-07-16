@@ -12,10 +12,15 @@ contract SetTest is Test {
     }
 
     function testMakeSet() public {
+        bytes32[] memory rabbitHashes = new bytes32[](2);
+        rabbitHashes[0] = keccak256(abi.encodePacked("rabbit1"));
+        rabbitHashes[1] = keccak256(abi.encodePacked("rabbit2"));
+
         ShowSet.Set({
             show: "1:1234",
             shape: 0,
-            order: 0
+            order: 0,
+            rabbitHashes: rabbitHashes
         });
     }
 

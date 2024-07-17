@@ -12,11 +12,14 @@ contract SetStone is ERC721Enumerable {
         uint8 order;
         uint16 color; // color
         string crystalization; // personal message
+        uint256 paidAmountWei;
     }
 
     uint256 public numberOfStonesMinted;
 
     mapping(bytes32 => Stone[]) public stonesBySetId;
+    mapping(uint256 => Stone) public stonesByTokenId;
+
 
     ILiveSet public liveSet;
 
@@ -31,7 +34,7 @@ contract SetStone is ERC721Enumerable {
     function isValidRabbit(
         bytes32 rabbitHash,
         bytes32[] memory rabbitHashes
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         for (uint i = 0; i < rabbitHashes.length; i++) {
             if (rabbitHashes[i] == rabbitHash) {
                 return true;
@@ -40,9 +43,22 @@ contract SetStone is ERC721Enumerable {
         return false;
     }
 
-    function getSetId(uint16 artistId, uint64 blockHeight, uint8 order) public view returns (bytes32) {
+    function getSetId(uint16 artistId, uint64 blockHeight, uint8 order) public pure returns (bytes32) {
         return bytes32(abi.encodePacked(artistId, blockHeight, order));
     }
+
+    function getStonesBySetId(bytes32 setId) public view returns (Stone[] memory) {
+        return stonesBySetId[setId];
+    }
+
+    function getStonesBySetId(uint16 artistId, uint64 blockHeight, uint8 order) public view returns (Stone[] memory) {
+        return stonesBySetId[getSetId(artistId, blockHeight, order)];
+    }
+
+    function getStoneByTokenId(uint256 tokenId) public view returns (Stone memory) {
+        return stonesByTokenId[tokenId];
+    }
+
 
     function mintStone(
         address to,
@@ -90,13 +106,15 @@ contract SetStone is ERC721Enumerable {
                 showBytes: showBytes,
                 order: order,
                 color: _color,
-                crystalization: _crystalization
+                crystalization: _crystalization,
+                paidAmountWei: msg.value
             })
         );
 
+        stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
+
         // mint the stone
-        uint256 tokenId = numberOfStonesMinted - 1;
-        _mint(to, tokenId);
+        _mint(to, numberOfStonesMinted);
         numberOfStonesMinted += 1;
     }
 }

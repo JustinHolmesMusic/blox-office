@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "../contracts/SetStone.sol";
 import "../contracts/LiveSet.sol";
+
 
 contract SetStoneTests is Test {
     SetStone stone_contract;
@@ -49,7 +51,6 @@ contract SetStoneTests is Test {
             stonePriceWei: 0.5 ether
         });
 
-
         // Show2, first set
         bytes32[] memory rabbitHashes3 = new bytes32[](2);
         rabbitHashes3[0] = keccak256(abi.encodePacked("rabbit5"));
@@ -57,7 +58,7 @@ contract SetStoneTests is Test {
 
         liveSet.addSet({
             artist_id: artist_id,
-            blockheight: blockheight+1,
+            blockheight: blockheight + 1,
             shape: 2,
             order: 0,
             rabbitHashes: rabbitHashes3,
@@ -71,7 +72,7 @@ contract SetStoneTests is Test {
 
         liveSet.addSet({
             artist_id: artist_id,
-            blockheight: blockheight+1,
+            blockheight: blockheight + 1,
             shape: 3,
             order: 1,
             rabbitHashes: rabbitHashes4,
@@ -79,24 +80,85 @@ contract SetStoneTests is Test {
         });
     }
 
-    function test_nop() public {
+    function test_nop() public pure {
         assertTrue(true);
     }
 
     function test_mint_stone() public {
-       uint16 artistId = 0;
-       uint64 blockHeight = 420;
-       uint8 order = 0;
-       uint16 color = 0;
-       string memory crystalization = "crystalized";
-       string memory rabbit_secret = "rabbit_secret";
+        uint16 artistId = 0;
+        uint64 blockHeight = 420;
+        uint8 order = 0;
 
+        vm.deal(address(this), 2 ether);
 
-    // TODO
-    //    stone_contract.mintStone(
-    //        //  address to
-    //        address(this),
-    //        // uint16 artistId,
-    //    )
+        // mint 2 stones for the same set
+        stone_contract.mintStone{value: 0.5 ether}(
+            address(this),
+            artistId,
+            blockHeight,
+            order,
+            0, // color
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            artistId,
+            blockHeight,
+            order,
+            1, // color
+            "crystalized stone 2",
+            "rabbit2"
+        );
+
+        // check that the stone has been minted
+        // check that the balance of the address is 1.5 ether
+        assertEq(address(stone_contract).balance, 1.5 ether);
+
+        // check that the stone has the correct attributes
+        SetStone.Stone[] memory stones = stone_contract.getStonesBySetId(
+            artistId,
+            blockHeight,
+            order
+        );
+
+        assertEq(stones.length, 2);
+        assertEq(
+            stones[0].showBytes,
+            bytes32(abi.encodePacked(artistId, blockHeight))
+        );
+        assertEq(stones[0].order, order);
+        assertEq(stones[0].color, 0);
+        assertEq(stones[0].crystalization, "crystalized");
+        assertEq(stones[0].paidAmountWei, 0.5 ether);
+
+        assertEq(
+            stones[1].showBytes,
+            bytes32(abi.encodePacked(artistId, blockHeight))
+        );
+        assertEq(stones[1].order, order);
+        assertEq(stones[1].color, 1);
+        assertEq(stones[1].crystalization, "crystalized stone 2");
+        assertEq(stones[1].paidAmountWei, 1 ether);
+
+        // check that the NFT has been properly minted
+        assertEq(stone_contract.ownerOf(0), address(this));
+        assertEq(stone_contract.ownerOf(1), address(this));
+
+        assertEq(stone_contract.balanceOf(address(this)), 2);
+        assertEq(stone_contract.tokenOfOwnerByIndex(address(this), 0), 0);
+        assertEq(stone_contract.tokenOfOwnerByIndex(address(this), 1), 1);
+
+        SetStone.Stone memory stoneToken0 = stone_contract.getStoneByTokenId(0);
+        SetStone.Stone memory stoneToken1 = stone_contract.getStoneByTokenId(1);
+
+        assertEq(stoneToken0.showBytes, bytes32(abi.encodePacked(artistId, blockHeight)));
+        assertEq(stoneToken1.showBytes, bytes32(abi.encodePacked(artistId, blockHeight)));
+        assertEq(stoneToken0.order, order);
+        assertEq(stoneToken1.order, order);
+        assertEq(stoneToken0.color, 0);
+        assertEq(stoneToken1.color, 1);
+
     }
 }

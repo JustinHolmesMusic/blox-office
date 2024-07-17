@@ -207,6 +207,59 @@ contract SetStoneTests is Test {
         assertEq(stone_contract.numberOfStonesMinted(), 0);
     }
 
+    function test_mint_stone_invalid_set() public {
+        // check that the minting reverts when given invalid set
+        vm.expectRevert("Set does not exist");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            571, // non-existing LiveSet (0, 571)
+            0, 
+            0, 
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+    }
 
+
+    function test_valid_color() public {
+        // check that the minting reverts when given invalid color
+
+        // minting first stone is just fine
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            1,
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+
+        vm.expectRevert("Color already taken for this set");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            1, // color already taken
+            "crystalized", // crystalization text
+            "rabbit2" // rabbit secret
+        );
+
+
+        // The number of valid colors is equal to the number of rabbit hashes in the set, which is 2 in our case
+        // so the valid colors are 0 and 1
+        vm.expectRevert("The color must not be greater than the number of all mintable stones");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, 
+            2, // too high color
+            "crystalized", 
+            "rabbit2" 
+        );
+    }
 
 }

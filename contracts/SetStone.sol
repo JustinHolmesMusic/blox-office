@@ -25,9 +25,6 @@ contract SetStone is ERC721Enumerable {
 
     address public owner; // Add owner state variable
 
-    // Mapping from set_id to a boolean array representing available colors
-    // TODO: what are the default values for the boolean array?
-
     constructor(address liveSetAddress) ERC721("SetStone", "STONE") {
         liveSet = ILiveSet(liveSetAddress);
         numberOfStonesMinted = 0;

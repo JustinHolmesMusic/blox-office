@@ -65,10 +65,10 @@ contract SetStoneTests is Test {
             stonePriceWei: 1 ether
         });
 
-        // Show2, first set
+        // Show2, second set
         bytes32[] memory rabbitHashes4 = new bytes32[](2);
-        rabbitHashes4[0] = keccak256(abi.encodePacked("rabbit5"));
-        rabbitHashes4[1] = keccak256(abi.encodePacked("rabbit6"));
+        rabbitHashes4[0] = keccak256(abi.encodePacked("rabbit7"));
+        rabbitHashes4[1] = keccak256(abi.encodePacked("rabbit8"));
 
         liveSet.addSet({
             artist_id: artist_id,
@@ -80,16 +80,12 @@ contract SetStoneTests is Test {
         });
     }
 
-    function test_nop() public pure {
-        assertTrue(true);
-    }
-
-    function test_mint_stone() public {
+    function test_mint_stones() public {
         uint16 artistId = 0;
         uint64 blockHeight = 420;
         uint8 order = 0;
 
-        vm.deal(address(this), 2 ether);
+        vm.deal(address(this), 10 ether);
 
         // mint 2 stones for the same set
         stone_contract.mintStone{value: 0.5 ether}(
@@ -160,5 +156,57 @@ contract SetStoneTests is Test {
         assertEq(stoneToken0.color, 0);
         assertEq(stoneToken1.color, 1);
 
+        // check that Stone with non-existing tokenId is an uninitialized Stone struct
+        SetStone.Stone memory emptyStone = stone_contract.getStoneByTokenId(2);
+        assertEq(emptyStone.showBytes, 0);
+        assertEq(emptyStone.order, 0);
+        assertEq(emptyStone.color, 0);
+        assertEq(emptyStone.crystalization, "");
+        assertEq(emptyStone.paidAmountWei, 0);
+
+        // mint one more stone for the second set
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            artistId,
+            blockHeight,
+            1, // order
+            0, // color
+            "crystalized", // crystalization text
+            "rabbit3" // rabbit secret
+        );
+
+        // mint stone for the second show
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            artistId,
+            blockHeight + 1,
+            0, // order
+            0, // color
+            "crystalized", // crystalization text
+            "rabbit5" // rabbit secret
+        );
+
+        assertEq(stone_contract.numberOfStonesMinted(), 4);
+        assertEq(stone_contract.balanceOf(address(this)), 4);
     }
+
+
+    function test_mint_stone_invalid_rabbit() public {
+        // check that the minting reverts when given invalid secret rabbit
+        vm.expectRevert("Invalid secret rabbit");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            0, // color
+            "crystalized", // crystalization text
+            "invalid_rabbit" // invalid rabbit secret
+        );
+
+        assertEq(stone_contract.numberOfStonesMinted(), 0);
+    }
+
+
+
 }

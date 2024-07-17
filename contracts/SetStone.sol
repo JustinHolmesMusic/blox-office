@@ -23,12 +23,20 @@ contract SetStone is ERC721Enumerable {
 
     ILiveSet public liveSet;
 
+    address public owner; // Add owner state variable
+
     // Mapping from set_id to a boolean array representing available colors
     // TODO: what are the default values for the boolean array?
 
     constructor(address liveSetAddress) ERC721("SetStone", "STONE") {
         liveSet = ILiveSet(liveSetAddress);
         numberOfStonesMinted = 0;
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
     }
 
     function isValidRabbit(
@@ -116,5 +124,9 @@ contract SetStone is ERC721Enumerable {
         // mint the stone
         _mint(to, numberOfStonesMinted);
         numberOfStonesMinted += 1;
+    }
+
+    function withdraw() external onlyOwner {
+        payable(owner).transfer(address(this).balance);
     }
 }

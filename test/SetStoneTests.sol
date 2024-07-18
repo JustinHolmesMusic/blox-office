@@ -16,7 +16,7 @@ contract SetStoneTests is Test {
 
         // first deploy the setlist contract
         LiveSet liveSet = new LiveSet();
-        stone_contract = new SetStone(address(liveSet));
+        stone_contract = new SetStone(address(liveSet), address(this), "https://justinholmes.com/setstones/");
 
         // let's add some test data to the setlist contract
 
@@ -128,6 +128,8 @@ contract SetStoneTests is Test {
         assertEq(stones[0].color, 0);
         assertEq(stones[0].crystalization, "crystalized");
         assertEq(stones[0].paidAmountWei, 0.5 ether);
+        assertEq(stones[0].rabbitHash, keccak256(abi.encodePacked("rabbit1")));
+
 
         assertEq(
             stones[1].showBytes,
@@ -137,6 +139,7 @@ contract SetStoneTests is Test {
         assertEq(stones[1].color, 1);
         assertEq(stones[1].crystalization, "crystalized stone 2");
         assertEq(stones[1].paidAmountWei, 1 ether);
+        assertEq(stones[1].rabbitHash, keccak256(abi.encodePacked("rabbit2")));
 
         // check that the NFT has been properly minted
         assertEq(stone_contract.ownerOf(0), address(this));
@@ -163,6 +166,7 @@ contract SetStoneTests is Test {
         assertEq(emptyStone.color, 0);
         assertEq(emptyStone.crystalization, "");
         assertEq(emptyStone.paidAmountWei, 0);
+        assertEq(emptyStone.rabbitHash, 0);
 
         // mint one more stone for the second set
         stone_contract.mintStone{value: 1 ether}(
@@ -261,5 +265,66 @@ contract SetStoneTests is Test {
             "rabbit2" 
         );
     }
+
+    function test_only_one_stone_per_secret_rabbit() public {
+        // check that the minting reverts when given invalid secret rabbit
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            0, // color
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+
+        vm.expectRevert("Secret Rabbit already used");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            1, // color
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+    }
+
+    function test_check_token_uri() public {
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            1, // color
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            421,
+            1, // order
+            0, // color
+            "crystalized", // crystalization text
+            "rabbit7" // rabbit secret
+        );
+
+        // Check the token URI of the minted stone
+        string memory expectedTokenURI = "https://justinholmes.com/setstones/0/420/0/1";
+        uint256 tokenID = 0;
+        string memory actualTokenURI = stone_contract.tokenURI(tokenID);
+        assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
+
+
+        expectedTokenURI = "https://justinholmes.com/setstones/0/421/1/0";
+        tokenID = 1;
+        actualTokenURI = stone_contract.tokenURI(tokenID);
+        assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
+    }
+
+
+
 
 }

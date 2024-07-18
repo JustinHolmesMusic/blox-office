@@ -4,37 +4,40 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "./ILiveSet.sol";
 
-contract SetStone is ERC721Enumerable {
+contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+
+
+
     struct Stone {
         bytes32 showBytes;
         uint8 order;
         uint16 color; // color
         string crystalization; // personal message
         uint256 paidAmountWei;
+        bytes32 rabbitHash;
     }
 
     uint256 public numberOfStonesMinted;
 
     mapping(bytes32 => Stone[]) public stonesBySetId;
+    mapping(bytes32 => mapping(bytes32 => bool)) public usedRabbitsBySetId;
     mapping(uint256 => Stone) public stonesByTokenId;
 
 
     ILiveSet public liveSet;
+    string public baseURI;
 
-    address public owner; // Add owner state variable
-
-    constructor(address liveSetAddress) ERC721("SetStone", "STONE") {
+    constructor(address liveSetAddress, address initialOwner, string memory base_uri) ERC721("SetStone", "STONE") Ownable(initialOwner) {
         liveSet = ILiveSet(liveSetAddress);
         numberOfStonesMinted = 0;
-        owner = msg.sender;
+        baseURI = base_uri;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not the contract owner");
-        _;
-    }
 
     function isValidRabbit(
         bytes32 rabbitHash,
@@ -90,9 +93,11 @@ contract SetStone is ERC721Enumerable {
             "Invalid secret rabbit"
         );
 
-        // check that the _color is a valid color and isn't yet taken for the given set
-
+        // check that the rabbitSecret hasn't been already used
         bytes32 setId = getSetId(artistId, blockHeight, order);
+        require(!usedRabbitsBySetId[setId][rabbitHash], "Secret Rabbit already used");
+
+        // check that the _color is a valid color and isn't yet taken for the given set
 
         Stone[] memory stonesForSet = stonesBySetId[getSetId(artistId, blockHeight, order)];
 
@@ -112,18 +117,60 @@ contract SetStone is ERC721Enumerable {
                 order: order,
                 color: _color,
                 crystalization: _crystalization,
-                paidAmountWei: msg.value
+                paidAmountWei: msg.value,
+                rabbitHash: rabbitHash
             })
         );
 
         stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
 
+        // compute the tokenURI
+        // string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
+        string memory token_uri = string.concat(
+            Strings.toString(artistId), "/",
+            Strings.toString(blockHeight), "/",
+            Strings.toString(order), "/",
+            Strings.toString(_color)
+        );
+
+
         // mint the stone
         _mint(to, numberOfStonesMinted);
+        _setTokenURI(numberOfStonesMinted, token_uri);
+        usedRabbitsBySetId[setId][rabbitHash] = true;
         numberOfStonesMinted += 1;
     }
 
     function withdraw() external onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        payable(owner()).transfer(address(this).balance);
+    }
+
+
+    // ------
+    // The following functions are overrides required by Solidity, because we are inheriting from multiple ERC721 implementations
+    // ------
+    function _increaseBalance(address to, uint128 value) internal override (ERC721Enumerable, ERC721) {
+        super._increaseBalance(to, value);
+    }
+
+    function tokenURI(uint256 tokenId) public view override(ERC721URIStorage, ERC721) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+
+    function _update(address to, uint256 tokenId, address auth) internal override (ERC721Enumerable, ERC721) returns (address) {
+        return super._update(to, tokenId, auth);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
+        // TODO: shouldn't we somehow combine the implementations from both ERC721Enumerable and ERC721URIStorage?
+        // as I understand it, super.supportsInterface(interfaceId) will select only one implementation
+        // so the supported interface will be either that of ERC721Enumerable or ERC721URIStorage
+        // but not both at the same time
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _baseURI() internal view override (ERC721) returns (string memory) {
+        return baseURI;
     }
 }

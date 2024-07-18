@@ -9,6 +9,7 @@ contract LiveSet {
         uint8 order; // 0 = first, 1 = second, 2 = third etc.
         bytes32[] rabbitHashes; // for each show we have a list of rabbit hashes
         uint256 stonePriceWei;
+
     }
 
     function addSet(

@@ -6,7 +6,7 @@ import "../contracts/MagicHat.sol";
 import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 
-contract DeployScript is Script {
+contract DeployMagicHatScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
@@ -19,7 +19,6 @@ contract DeployScript is Script {
         for (uint256 i = 0; i < 100; i++) {
             rabbitHashes[i] = keccak256(abi.encodePacked(Strings.toString(i)));
         }
-
 
         MagicHat magicHat = new MagicHat(rabbitHashes);
 

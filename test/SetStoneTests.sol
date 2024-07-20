@@ -49,11 +49,13 @@ contract SetStoneTests is Test {
         });
 
         // Show2, first set
-        bytes32[] memory rabbitHashes3 = new bytes32[](2);
-        rabbitHashes3[0] = keccak256(abi.encodePacked("rabbit5"));
-        rabbitHashes3[1] = keccak256(abi.encodePacked("rabbit6"));
+        bytes32[] memory rabbitHashes2 = new bytes32[](4);
+        rabbitHashes2[0] = keccak256(abi.encodePacked("rabbit5"));
+        rabbitHashes2[1] = keccak256(abi.encodePacked("rabbit6"));
+        rabbitHashes2[2] = keccak256(abi.encodePacked("rabbit7"));
+        rabbitHashes2[3] = keccak256(abi.encodePacked("rabbit8"));
 
-        stone_contract.commitRabbitHashesForShow(artist_id, blockheight + 1, rabbitHashes3);
+        stone_contract.commitRabbitHashesForShow(artist_id, blockheight + 1, rabbitHashes2);
 
         liveSet.addSet({
             artist_id: artist_id,
@@ -64,10 +66,6 @@ contract SetStoneTests is Test {
         });
 
         // Show2, second set
-        bytes32[] memory rabbitHashes4 = new bytes32[](2);
-        rabbitHashes4[0] = keccak256(abi.encodePacked("rabbit7"));
-        rabbitHashes4[1] = keccak256(abi.encodePacked("rabbit8"));
-
         liveSet.addSet({
             artist_id: artist_id,
             blockheight: blockheight + 1,
@@ -209,6 +207,17 @@ contract SetStoneTests is Test {
     }
 
     function test_mint_stone_invalid_set() public {
+        vm.expectRevert("Set does not exist");
+        stone_contract.mintStone{value: 1 ether}(
+            address(this),
+            0,
+            420,
+            2, 
+            0, 
+            "crystalized", 
+            "rabbit1" 
+        );
+
         // check that the minting reverts when given invalid set
         vm.expectRevert("Set does not exist");
         stone_contract.mintStone{value: 1 ether}(
@@ -276,7 +285,7 @@ contract SetStoneTests is Test {
             "rabbit1" // rabbit secret
         );
 
-        vm.expectRevert("Secret Rabbit already used");
+        vm.expectRevert("Invalid secret rabbit");
         stone_contract.mintStone{value: 1 ether}(
             address(this),
             0,

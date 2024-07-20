@@ -9,7 +9,7 @@ contract LiveSet {
         uint8 order; // 0 = first, 1 = second, 2 = third etc.
         // bytes32[] rabbitHashes; // for each show we have a list of rabbit hashes
         uint256 stonePriceWei;
-
+        bool isActive; // Always true
     }
 
     function addSet(
@@ -18,7 +18,7 @@ contract LiveSet {
         uint8 shape,
         uint8 order,
         uint256 stonePriceWei) public onlyOwner {
-        Set memory newSet = Set(shape, order, stonePriceWei);
+        Set memory newSet = Set(shape, order, stonePriceWei, true);
 
         // Parse the show bytes into band ID and blockheight
         bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
@@ -48,11 +48,11 @@ contract LiveSet {
     //     return false;
     // }
 
-    // function isValidSet(bytes32 showBytes, uint8 order) public view returns (bool) {
+    function isValidSet(bytes32 showBytes, uint8 order) public view returns (bool) {
         // The result of querying the mapping with keys that has not been assigned a value will return default value for the type
-        // for the Set struct, the default value of rabbitHashes is the empty array
-        // return sets[showBytes][order].rabbitHashes.length > 0;
-    // }
+        // for the Set struct, the default value of isActive is false
+        return sets[showBytes][order].isActive;
+    }
 
     function getSetForShow(uint16 artist_id, uint64 blockheight, uint8 order) public view returns (Set memory) {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id,

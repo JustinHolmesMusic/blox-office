@@ -105,7 +105,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     ) external payable {
         // check that the set exists
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
-        // require(liveSet.isValidSet(showBytes, order), "Set does not exist");
+        require(liveSet.isValidSet(showBytes, order), "Set does not exist");
 
         // check that the payed amount is greater or equal to the stone price for the given set
         ILiveSet.Set memory set = liveSet.getSetForShow(artistId, blockHeight, order);

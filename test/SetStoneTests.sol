@@ -15,7 +15,7 @@ contract SetStoneTests is Test {
 
         // let's add some test data to the setlist contract
 
-        // Show1, first set
+        // Show1
         bytes32[] memory rabbitHashes = new bytes32[](4);
         rabbitHashes[0] = keccak256(abi.encodePacked("rabbit1"));
         rabbitHashes[1] = keccak256(abi.encodePacked("rabbit2"));
@@ -24,7 +24,7 @@ contract SetStoneTests is Test {
 
         uint8[] memory shapes = new uint8[](2);
         shapes[0] = 0;
-        shapes[1] = 0;
+        shapes[1] = 1;
 
         stone_contract.makeShowAvailableForStoneMinting(
             {artist_id: 0,
@@ -35,8 +35,25 @@ contract SetStoneTests is Test {
                 stonePrice: 0.5 ether
             });
 
-////////////////////////////////////////
-        ////////////////////
+        // Show2
+        bytes32[] memory rabbitHashes2 = new bytes32[](4);
+        rabbitHashes2[0] = keccak256(abi.encodePacked("rabbit5"));
+        rabbitHashes2[1] = keccak256(abi.encodePacked("rabbit6"));
+        rabbitHashes2[2] = keccak256(abi.encodePacked("rabbit7"));
+        rabbitHashes2[3] = keccak256(abi.encodePacked("rabbit8"));
+
+        uint8[] memory shapes2 = new uint8[](2);
+        shapes2[0] = 2;
+        shapes2[1] = 3;
+
+        stone_contract.makeShowAvailableForStoneMinting(
+            {artist_id: 0,
+                blockheight: 421,
+                rabbitHashes: rabbitHashes2,
+                numberOfSets: 2,
+                shapes: shapes2, // empty shapes array, we will add them later
+                stonePrice: 0.5 ether
+            });
 
     }
 
@@ -293,6 +310,19 @@ contract SetStoneTests is Test {
         tokenID = 1;
         actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
+    }
+
+    function test_paid_too_little_for_a_setstone() public {
+        vm.expectRevert("Paid too little ETH for a setstone");
+        stone_contract.mintStone{value: 0.1 ether}(
+            address(this),
+            0,
+            420,
+            0, // order
+            1, // color
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
     }
 
 

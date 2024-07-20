@@ -70,7 +70,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     function isValidRabbit(
         bytes32 rabbitHash,
         bytes32 showBytes
-    ) public returns (bool) {
+    ) public view returns (bool) {
         bytes32[] memory rabbitHashes = rabbitHashesByShow[showBytes];
         for (uint i = 0; i < rabbitHashes.length; i++) {
             if (rabbitHashes[i] == rabbitHash) {
@@ -117,31 +117,33 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         string memory _crystalization,
         string memory _rabbit_secret
     ) external payable {
-// check that the set exists
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
 
-// check that the payed amount is greater or equal to the stone price for the given set
-        require(msg.value >= stonePriceByShow[showBytes], "Insufficient funds");
-// check that the secretRabbit is a valid secret for a given set
+        // check that the set exists and that the order is valid
+        require(numberOfSetsInShow[showBytes] > order, "Set does not exist");
+
+        // check that the payed amount is greater or equal to the stone price for the given set
+        require(msg.value >= stonePriceByShow[showBytes], "Paid too little ETH for a setstone");
+        // check that the secretRabbit is a valid secret for a given set
         bytes32 rabbitHash = keccak256(abi.encodePacked(_rabbit_secret));
         require(
             isValidRabbit(rabbitHash, showBytes),
             "Invalid secret rabbit"
         );
 
-// --- Color checks ---
-// The color must be less than the number of all mintable stones
+        // --- Color checks ---
+        // The color must be less than the number of all mintable stones
         require(_color < stonesPossiblePerShow[showBytes], "The color must not be greater than the number of all mintable stones");
 
         bytes32 setId = getSetId(artistId, blockHeight, order);
-// The color must not be already taken for the given set
-// Iterate through all the setStones and check the color
+        // The color must not be already taken for the given set
+        // Iterate through all the setStones and check the color
         Stone[] memory stonesForSet = stonesBySetId[setId];
         for (uint i = 0; i < stonesForSet.length; i++) {
             require(stonesForSet[i].color != _color, "Color already taken for this set");
         }
 
-// create the stone by adding it to the stones array
+        // create the stone by adding it to the stones array
         stonesBySetId[setId].push(
             Stone({
                 showBytes: showBytes,
@@ -155,8 +157,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
 
-// compute the tokenURI
-// string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
+        // compute the tokenURI
+        // string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
         string memory token_uri = string.concat(
             Strings.toString(artistId), "/",
             Strings.toString(blockHeight), "/",
@@ -164,7 +166,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             Strings.toString(_color)
         );
 
-// mint the stone
+        // mint the stone
         _mint(to, numberOfStonesMinted);
         _setTokenURI(numberOfStonesMinted, token_uri);
         _burnRabbitHash(showBytes, rabbitHash);
@@ -175,9 +177,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         payable(owner()).transfer(address(this).balance);
     }
 
-// ------
-// The following functions are overrides required by Solidity, because we are inheriting from multiple ERC721 implementations
-// ------
+    // ------
+    // The following functions are overrides required by Solidity, because we are inheriting from multiple ERC721 implementations
+    // ------
     function _increaseBalance(address to, uint128 value) internal override (ERC721Enumerable, ERC721) {
         super._increaseBalance(to, value);
     }
@@ -192,10 +194,10 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
-// TODO: shouldn't we somehow combine the implementations from both ERC721Enumerable and ERC721URIStorage?
-// as I understand it, super.supportsInterface(interfaceId) will select only one implementation
-// so the supported interface will be either that of ERC721Enumerable or ERC721URIStorage
-// but not both at the same time
+    // TODO: shouldn't we somehow combine the implementations from both ERC721Enumerable and ERC721URIStorage?
+    // as I understand it, super.supportsInterface(interfaceId) will select only one implementation
+    // so the supported interface will be either that of ERC721Enumerable or ERC721URIStorage
+    // but not both at the same time
         return super.supportsInterface(interfaceId);
     }
 

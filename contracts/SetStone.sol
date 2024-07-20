@@ -46,6 +46,12 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         stonesPossiblePerShow[showBytes] = uint16(rabbitHashes.length);
     }
 
+    function getRabbitHashesForShow(uint16 artist_id, uint64 blockheight) public view returns (bytes32[] memory) {
+        bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
+            blockheight));
+        return rabbitHashesPerShow[showBytes];
+    }
+
 
     function isValidRabbit(
         bytes32 rabbitHash,

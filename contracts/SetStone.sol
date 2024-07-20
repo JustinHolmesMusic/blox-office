@@ -12,7 +12,6 @@ import "./ILiveSet.sol";
 contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
 
-
     struct Stone {
         bytes32 showBytes;
         uint8 order;
@@ -25,9 +24,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     uint256 public numberOfStonesMinted;
 
     mapping(bytes32 => Stone[]) public stonesBySetId;
-    mapping(bytes32 => mapping(bytes32 => bool)) public usedRabbitsBySetId;
     mapping(uint256 => Stone) public stonesByTokenId;
-
+    mapping(bytes32 => bytes32[]) public rabbitHashesPerShow;
+    mapping(bytes32 => uint16) public stonesPossiblePerShow;
 
     ILiveSet public liveSet;
     string public baseURI;
@@ -39,16 +38,37 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
 
+    function commitRabbitHashesForShow(uint16 artist_id, uint64 blockheight, bytes32[] memory rabbitHashes) public onlyOwner {
+        // Authorized by artistID?
+        bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
+            blockheight));
+        rabbitHashesPerShow[showBytes] = rabbitHashes;
+        stonesPossiblePerShow[showBytes] = uint16(rabbitHashes.length);
+    }
+
+
     function isValidRabbit(
         bytes32 rabbitHash,
-        bytes32[] memory rabbitHashes
-    ) public pure returns (bool) {
+        bytes32 showBytes
+    ) public returns (bool) {
+        bytes32[] memory rabbitHashes = rabbitHashesPerShow[showBytes];
         for (uint i = 0; i < rabbitHashes.length; i++) {
             if (rabbitHashes[i] == rabbitHash) {
                 return true;
             }
         }
         return false;
+    }
+
+    function _burnRabbitHash(bytes32 showBytes, bytes32 rabbitHash) internal {
+        bytes32[] memory rabbitHashes = rabbitHashesPerShow[showBytes];
+        for (uint i = 0; i < rabbitHashes.length; i++) {
+            if (rabbitHashes[i] == rabbitHash) {
+                rabbitHashesPerShow[showBytes][i] = rabbitHashes[rabbitHashes.length - 1];
+                rabbitHashesPerShow[showBytes].pop();
+                break;
+            }
+        }
     }
 
     function getSetId(uint16 artistId, uint64 blockHeight, uint8 order) public pure returns (bytes32) {
@@ -79,7 +99,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     ) external payable {
         // check that the set exists
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
-        require(liveSet.isValidSet(showBytes, order), "Set does not exist");
+        // require(liveSet.isValidSet(showBytes, order), "Set does not exist");
 
         // check that the payed amount is greater or equal to the stone price for the given set
         ILiveSet.Set memory set = liveSet.getSetForShow(artistId, blockHeight, order);
@@ -89,23 +109,18 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // check that the secretRabbit is a valid secret for a given set
         bytes32 rabbitHash = keccak256(abi.encodePacked(_rabbit_secret));
         require(
-            isValidRabbit(rabbitHash, set.rabbitHashes),
+            isValidRabbit(rabbitHash, showBytes),
             "Invalid secret rabbit"
         );
 
-        // check that the rabbitSecret hasn't been already used
-        bytes32 setId = getSetId(artistId, blockHeight, order);
-        require(!usedRabbitsBySetId[setId][rabbitHash], "Secret Rabbit already used");
-
-        // check that the _color is a valid color and isn't yet taken for the given set
-
-        Stone[] memory stonesForSet = stonesBySetId[getSetId(artistId, blockHeight, order)];
-
+        // --- Color checks ---
         // The color must be less than the number of all mintable stones
-        require(_color < set.rabbitHashes.length, "The color must not be greater than the number of all mintable stones");
+        require(_color < stonesPossiblePerShow[showBytes], "Invalid color");
 
+        bytes32 setId = getSetId(artistId, blockHeight, order);
         // The color must not be already taken for the given set
         // Iterate through all the setStones and check the color
+        Stone[] memory stonesForSet = stonesBySetId[setId];
         for (uint i = 0; i < stonesForSet.length; i++) {
             require(stonesForSet[i].color != _color, "Color already taken for this set");
         }
@@ -137,7 +152,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // mint the stone
         _mint(to, numberOfStonesMinted);
         _setTokenURI(numberOfStonesMinted, token_uri);
-        usedRabbitsBySetId[setId][rabbitHash] = true;
+        _burnRabbitHash(showBytes, rabbitHash);
         numberOfStonesMinted += 1;
     }
 

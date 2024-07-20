@@ -7,7 +7,7 @@ contract LiveSet {
     struct Set {
         uint8 shape; // 0 = diamond, 1 = triangle, 2 = circle etc.
         uint8 order; // 0 = first, 1 = second, 2 = third etc.
-        bytes32[] rabbitHashes; // for each show we have a list of rabbit hashes
+        // bytes32[] rabbitHashes; // for each show we have a list of rabbit hashes
         uint256 stonePriceWei;
 
     }
@@ -17,9 +17,8 @@ contract LiveSet {
         uint64 blockheight,
         uint8 shape,
         uint8 order,
-        bytes32[] memory rabbitHashes,
         uint256 stonePriceWei) public onlyOwner {
-        Set memory newSet = Set(shape, order, rabbitHashes, stonePriceWei);
+        Set memory newSet = Set(shape, order, stonePriceWei);
 
         // Parse the show bytes into band ID and blockheight
         bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
@@ -27,8 +26,9 @@ contract LiveSet {
 
         show_ids.push(showBytes);
         sets[showBytes][newSet.order] = newSet;
-
     }
+
+
 
     function getShowIds() public view returns (bytes32[] memory) {
         return show_ids;
@@ -48,11 +48,11 @@ contract LiveSet {
     //     return false;
     // }
 
-    function isValidSet(bytes32 showBytes, uint8 order) public view returns (bool) {
+    // function isValidSet(bytes32 showBytes, uint8 order) public view returns (bool) {
         // The result of querying the mapping with keys that has not been assigned a value will return default value for the type
         // for the Set struct, the default value of rabbitHashes is the empty array
-        return sets[showBytes][order].rabbitHashes.length > 0;
-    }
+        // return sets[showBytes][order].rabbitHashes.length > 0;
+    // }
 
     function getSetForShow(uint16 artist_id, uint64 blockheight, uint8 order) public view returns (Set memory) {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id,

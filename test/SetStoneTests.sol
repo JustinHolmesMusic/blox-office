@@ -11,12 +11,7 @@ contract SetStoneTests is Test {
     SetStone stone_contract;
 
     function setUp() public {
-        // instantiate the live set contract with 2 shows, 2 sets each
-        // than point the stone contract to it
-
-        // first deploy the setlist contract
-        LiveSet liveSet = new LiveSet();
-        stone_contract = new SetStone(address(liveSet), address(this), "https://justinholmes.com/setstones/");
+        stone_contract = new SetStone(address(this), "https://justinholmes.com/setstones/");
 
         // let's add some test data to the setlist contract
 
@@ -27,52 +22,22 @@ contract SetStoneTests is Test {
         rabbitHashes[2] = keccak256(abi.encodePacked("rabbit3"));
         rabbitHashes[3] = keccak256(abi.encodePacked("rabbit4"));
 
-        stone_contract.commitRabbitHashesForShow(0, 420, rabbitHashes);
+        uint8[] memory shapes = new uint8[](2);
+        shapes[0] = 0;
+        shapes[1] = 0;
 
-        uint16 artist_id = 0;
-        uint64 blockheight = 420;
+        stone_contract.makeShowAvailableForStoneMinting(
+            {artist_id: 0,
+                blockheight: 420,
+                rabbitHashes: rabbitHashes,
+                numberOfSets: 2,
+                shapes: shapes, // empty shapes array, we will add them later
+                stonePrice: 0.5 ether
+            });
 
-        liveSet.addSet({
-            artist_id: artist_id,
-            blockheight: blockheight,
-            shape: 0,
-            order: 0,
-            stonePriceWei: 0.5 ether
-        });
+////////////////////////////////////////
+        ////////////////////
 
-        liveSet.addSet({
-            artist_id: artist_id,
-            blockheight: blockheight,
-            shape: 1,
-            order: 1,
-            stonePriceWei: 0.5 ether
-        });
-
-        // Show2, first set
-        bytes32[] memory rabbitHashes2 = new bytes32[](4);
-        rabbitHashes2[0] = keccak256(abi.encodePacked("rabbit5"));
-        rabbitHashes2[1] = keccak256(abi.encodePacked("rabbit6"));
-        rabbitHashes2[2] = keccak256(abi.encodePacked("rabbit7"));
-        rabbitHashes2[3] = keccak256(abi.encodePacked("rabbit8"));
-
-        stone_contract.commitRabbitHashesForShow(artist_id, blockheight + 1, rabbitHashes2);
-
-        liveSet.addSet({
-            artist_id: artist_id,
-            blockheight: blockheight + 1,
-            shape: 2,
-            order: 0,
-            stonePriceWei: 1 ether
-        });
-
-        // Show2, second set
-        liveSet.addSet({
-            artist_id: artist_id,
-            blockheight: blockheight + 1,
-            shape: 3,
-            order: 1,
-            stonePriceWei: 1 ether
-        });
     }
 
     function test_mint_stones() public {
@@ -212,10 +177,10 @@ contract SetStoneTests is Test {
             address(this),
             0,
             420,
-            2, 
-            0, 
-            "crystalized", 
-            "rabbit1" 
+            2,
+            0,
+            "crystalized",
+            "rabbit1"
         );
 
         // check that the minting reverts when given invalid set
@@ -224,8 +189,8 @@ contract SetStoneTests is Test {
             address(this),
             0,
             571, // non-existing LiveSet (0, 571)
-            0, 
-            0, 
+            0,
+            0,
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -258,7 +223,6 @@ contract SetStoneTests is Test {
             "rabbit2" // rabbit secret
         );
 
-
         // The number of valid colors is equal to the number of rabbit hashes in show, which is 4 in our case
         // so the valid colors are 0, 1, 2, 3
         vm.expectRevert("The color must not be greater than the number of all mintable stones");
@@ -266,10 +230,10 @@ contract SetStoneTests is Test {
             address(this),
             0,
             420,
-            0, 
+            0,
             5, // too high color
-            "crystalized", 
-            "rabbit2" 
+            "crystalized",
+            "rabbit2"
         );
     }
 
@@ -330,8 +294,6 @@ contract SetStoneTests is Test {
         actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
     }
-
-
 
 
 }

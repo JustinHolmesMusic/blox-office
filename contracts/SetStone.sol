@@ -25,39 +25,53 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     mapping(bytes32 => Stone[]) public stonesBySetId;
     mapping(uint256 => Stone) public stonesByTokenId;
-    mapping(bytes32 => bytes32[]) public rabbitHashesPerShow;
-    mapping(bytes32 => uint16) public stonesPossiblePerShow;
 
-    ILiveSet public liveSet;
+    mapping(bytes32 => bytes32[]) public rabbitHashesByShow;
+    mapping(bytes32 => uint16) public stonesPossiblePerShow;
+    mapping(bytes32 => uint8) public numberOfSetsInShow;
+    mapping(bytes32 => uint8[]) public setShapes;
+    mapping(bytes32 => uint256) public stonePriceByShow; // Someday, 0 might mean "auction" or "free" or "donation" or "not for sale"
+
     string public baseURI;
 
-    constructor(address liveSetAddress, address initialOwner, string memory base_uri) ERC721("SetStone", "STONE") Ownable(initialOwner) {
-        liveSet = ILiveSet(liveSetAddress);
+    constructor(address initialOwner, string memory base_uri) ERC721("SetStone", "STONE") Ownable(initialOwner) {
         numberOfStonesMinted = 0;
         baseURI = base_uri;
     }
 
+    function makeShowAvailableForStoneMinting(uint16 artist_id,
+        uint64 blockheight,
+        bytes32[] memory rabbitHashes,
+        uint8 numberOfSets,
+        uint8[] memory shapes,
+        uint256 stonePrice) public {
 
-    function commitRabbitHashesForShow(uint16 artist_id, uint64 blockheight, bytes32[] memory rabbitHashes) public onlyOwner {
+        // Check that number of sets match length of shapes array.
+        require(numberOfSets == shapes.length, "Number of sets must match length of shapes array");
+
+
         // Authorized by artistID?
-        bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
+        bytes32 showBytes = bytes32(abi.encodePacked(artist_id,
             blockheight));
-        rabbitHashesPerShow[showBytes] = rabbitHashes;
+        rabbitHashesByShow[showBytes] = rabbitHashes;
         stonesPossiblePerShow[showBytes] = uint16(rabbitHashes.length);
+
+        numberOfSetsInShow[showBytes] = numberOfSets;
+        setShapes[showBytes] = shapes;
+        stonePriceByShow[showBytes] = stonePrice;
     }
 
     function getRabbitHashesForShow(uint16 artist_id, uint64 blockheight) public view returns (bytes32[] memory) {
-        bytes32 showBytes =  bytes32(abi.encodePacked(artist_id,
+        bytes32 showBytes = bytes32(abi.encodePacked(artist_id,
             blockheight));
-        return rabbitHashesPerShow[showBytes];
+        return rabbitHashesByShow[showBytes];
     }
-
 
     function isValidRabbit(
         bytes32 rabbitHash,
         bytes32 showBytes
     ) public returns (bool) {
-        bytes32[] memory rabbitHashes = rabbitHashesPerShow[showBytes];
+        bytes32[] memory rabbitHashes = rabbitHashesByShow[showBytes];
         for (uint i = 0; i < rabbitHashes.length; i++) {
             if (rabbitHashes[i] == rabbitHash) {
                 return true;
@@ -67,11 +81,11 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function _burnRabbitHash(bytes32 showBytes, bytes32 rabbitHash) internal {
-        bytes32[] memory rabbitHashes = rabbitHashesPerShow[showBytes];
+        bytes32[] memory rabbitHashes = rabbitHashesByShow[showBytes];
         for (uint i = 0; i < rabbitHashes.length; i++) {
             if (rabbitHashes[i] == rabbitHash) {
-                rabbitHashesPerShow[showBytes][i] = rabbitHashes[rabbitHashes.length - 1];
-                rabbitHashesPerShow[showBytes].pop();
+                rabbitHashesByShow[showBytes][i] = rabbitHashes[rabbitHashes.length - 1];
+                rabbitHashesByShow[showBytes].pop();
                 break;
             }
         }
@@ -103,35 +117,31 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         string memory _crystalization,
         string memory _rabbit_secret
     ) external payable {
-        // check that the set exists
+// check that the set exists
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
-        require(liveSet.isValidSet(showBytes, order), "Set does not exist");
 
-        // check that the payed amount is greater or equal to the stone price for the given set
-        ILiveSet.Set memory set = liveSet.getSetForShow(artistId, blockHeight, order);
-
-        require(msg.value >= set.stonePriceWei, "Not enough ETH");
-
-        // check that the secretRabbit is a valid secret for a given set
+// check that the payed amount is greater or equal to the stone price for the given set
+        require(msg.value >= stonePriceByShow[showBytes], "Insufficient funds");
+// check that the secretRabbit is a valid secret for a given set
         bytes32 rabbitHash = keccak256(abi.encodePacked(_rabbit_secret));
         require(
             isValidRabbit(rabbitHash, showBytes),
             "Invalid secret rabbit"
         );
 
-        // --- Color checks ---
-        // The color must be less than the number of all mintable stones
+// --- Color checks ---
+// The color must be less than the number of all mintable stones
         require(_color < stonesPossiblePerShow[showBytes], "The color must not be greater than the number of all mintable stones");
 
         bytes32 setId = getSetId(artistId, blockHeight, order);
-        // The color must not be already taken for the given set
-        // Iterate through all the setStones and check the color
+// The color must not be already taken for the given set
+// Iterate through all the setStones and check the color
         Stone[] memory stonesForSet = stonesBySetId[setId];
         for (uint i = 0; i < stonesForSet.length; i++) {
             require(stonesForSet[i].color != _color, "Color already taken for this set");
         }
 
-        // create the stone by adding it to the stones array
+// create the stone by adding it to the stones array
         stonesBySetId[setId].push(
             Stone({
                 showBytes: showBytes,
@@ -145,8 +155,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
 
-        // compute the tokenURI
-        // string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
+// compute the tokenURI
+// string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
         string memory token_uri = string.concat(
             Strings.toString(artistId), "/",
             Strings.toString(blockHeight), "/",
@@ -154,8 +164,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             Strings.toString(_color)
         );
 
-
-        // mint the stone
+// mint the stone
         _mint(to, numberOfStonesMinted);
         _setTokenURI(numberOfStonesMinted, token_uri);
         _burnRabbitHash(showBytes, rabbitHash);
@@ -166,10 +175,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         payable(owner()).transfer(address(this).balance);
     }
 
-
-    // ------
-    // The following functions are overrides required by Solidity, because we are inheriting from multiple ERC721 implementations
-    // ------
+// ------
+// The following functions are overrides required by Solidity, because we are inheriting from multiple ERC721 implementations
+// ------
     function _increaseBalance(address to, uint128 value) internal override (ERC721Enumerable, ERC721) {
         super._increaseBalance(to, value);
     }
@@ -184,10 +192,10 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool) {
-        // TODO: shouldn't we somehow combine the implementations from both ERC721Enumerable and ERC721URIStorage?
-        // as I understand it, super.supportsInterface(interfaceId) will select only one implementation
-        // so the supported interface will be either that of ERC721Enumerable or ERC721URIStorage
-        // but not both at the same time
+// TODO: shouldn't we somehow combine the implementations from both ERC721Enumerable and ERC721URIStorage?
+// as I understand it, super.supportsInterface(interfaceId) will select only one implementation
+// so the supported interface will be either that of ERC721Enumerable or ERC721URIStorage
+// but not both at the same time
         return super.supportsInterface(interfaceId);
     }
 

@@ -24,7 +24,6 @@ contract SetTest is Test {
             blockheight: blockheight,
             shape: 0,
             order: 0,
-            rabbitHashes: rabbitHashes,
             stonePriceWei: 1 ether
         });
 
@@ -39,8 +38,5 @@ contract SetTest is Test {
         LiveSet.Set memory same_set_by_bytes = set_contract.getSetForShowByShowBytes(showBytes, 0);
         assertEq(same_set_by_bytes.shape, this_set_in_particular.shape);
         assertEq(same_set_by_bytes.order, this_set_in_particular.order);
-        assertEq(same_set_by_bytes.rabbitHashes[0], rabbitHashes[0]);
-        assertEq(same_set_by_bytes.rabbitHashes[1], rabbitHashes[1]);
-        
     }
 }

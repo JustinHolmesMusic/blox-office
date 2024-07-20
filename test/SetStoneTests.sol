@@ -250,15 +250,15 @@ contract SetStoneTests is Test {
         );
 
 
-        // The number of valid colors is equal to the number of rabbit hashes in the set, which is 2 in our case
-        // so the valid colors are 0 and 1
+        // The number of valid colors is equal to the number of rabbit hashes in show, which is 4 in our case
+        // so the valid colors are 0, 1, 2, 3
         vm.expectRevert("The color must not be greater than the number of all mintable stones");
         stone_contract.mintStone{value: 1 ether}(
             address(this),
             0,
             420,
             0, 
-            2, // too high color
+            5, // too high color
             "crystalized", 
             "rabbit2" 
         );

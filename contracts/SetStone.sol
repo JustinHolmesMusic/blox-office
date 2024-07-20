@@ -121,7 +121,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         // --- Color checks ---
         // The color must be less than the number of all mintable stones
-        require(_color < stonesPossiblePerShow[showBytes], "Invalid color");
+        require(_color < stonesPossiblePerShow[showBytes], "The color must not be greater than the number of all mintable stones");
 
         bytes32 setId = getSetId(artistId, blockHeight, order);
         // The color must not be already taken for the given set

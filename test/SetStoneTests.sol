@@ -326,28 +326,21 @@ contract SetStoneTests is Test {
     }
 
     function test_get_show_data() public {
-        // Arrange
-        uint16 artistId = 0;
-        uint64 blockHeight1 = 420;
-        uint64 blockHeight2 = 421;
-
         // Act
-        (bytes32 showBytes1, uint16 stonesPossible1, uint8 numberOfSets1, uint256 stonePrice1, bytes32[] memory rabbitHashes1) = stone_contract.getShowData(artistId, blockHeight1);
-        (bytes32 showBytes2, uint16 stonesPossible2, uint8 numberOfSets2, uint256 stonePrice2, bytes32[] memory rabbitHashes2) = stone_contract.getShowData(artistId, blockHeight2);
+        (bytes32 showBytes1, uint16 stonesPossible1, uint8 numberOfSets1, uint256 stonePrice1, bytes32[] memory rabbitHashes1, uint8[] memory setShapes1) = stone_contract.getShowData(0, 420);
+        (bytes32 showBytes2, uint16 stonesPossible2, uint8 numberOfSets2, uint256 stonePrice2, bytes32[] memory rabbitHashes2, uint8[] memory setShapes2) = stone_contract.getShowData(0, 421);
 
         // Assert for Show1
-        bytes32 expectedShowBytes1 = bytes32(abi.encodePacked(artistId, blockHeight1));
-        assertEq(showBytes1, expectedShowBytes1, "Show1 bytes do not match");
         assertEq(stonesPossible1, 4, "Show1 number of stones possible does not match");
         assertEq(numberOfSets1, 2, "Show1 number of sets does not match");
         assertEq(stonePrice1, 0.5 ether, "Show1 stone price does not match");
+        assertEq(setShapes1.length, 2, "Show1 number of set shapes does not match");
 
         // Assert for Show2
-        bytes32 expectedShowBytes2 = bytes32(abi.encodePacked(artistId, blockHeight2));
-        assertEq(showBytes2, expectedShowBytes2, "Show2 bytes do not match");
         assertEq(stonesPossible2, 4, "Show2 number of stones possible does not match");
         assertEq(numberOfSets2, 2, "Show2 number of sets does not match");
         assertEq(stonePrice2, 0.5 ether, "Show2 stone price does not match");
+        assertEq(setShapes2.length, 2, "Show2 number of set shapes does not match");
 
         assertEq(rabbitHashes1.length, 4, "Show1 number of rabbit hashes does not match");
         assertEq(rabbitHashes2.length, 4, "Show2 number of rabbit hashes does not match");

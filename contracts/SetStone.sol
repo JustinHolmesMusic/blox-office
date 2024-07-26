@@ -15,7 +15,10 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     struct Stone {
         bytes32 showBytes;
         uint8 order;
-        uint16 color; // color
+        uint16 color1;
+        uint16 color2;
+        uint16 color3;
+
         string crystalization; // personal message
         uint256 paidAmountWei;
         bytes32 rabbitHash;
@@ -118,7 +121,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint16 artistId,
         uint64 blockHeight,
         uint8 order,
-        uint16 _color,
+        uint16 _color1,
+        uint16 _color2,
+        uint16 _color3,
         string memory _crystalization,
         string memory _rabbit_secret
     ) external payable {
@@ -136,16 +141,16 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             "Invalid secret rabbit"
         );
 
-        // --- Color checks ---
-        // The color must be less than the number of all mintable stones
-        require(_color < stonesPossiblePerShow[showBytes], "The color must not be greater than the number of all mintable stones");
 
+        // --- Color checks ---
         bytes32 setId = getSetId(artistId, blockHeight, order);
         // The color must not be already taken for the given set
         // Iterate through all the setStones and check the color
         Stone[] memory stonesForSet = stonesBySetId[setId];
         for (uint i = 0; i < stonesForSet.length; i++) {
-            require(stonesForSet[i].color != _color, "Color already taken for this set");
+            require(stonesForSet[i].color1 != _color1 || 
+            stonesForSet[i].color2 != _color2 || 
+            stonesForSet[i].color3 != _color3, "Color already taken for this set");
         }
 
         // create the stone by adding it to the stones array
@@ -153,7 +158,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             Stone({
                 showBytes: showBytes,
                 order: order,
-                color: _color,
+                color1: _color1,
+                color2: _color2,
+                color3: _color3,
                 crystalization: _crystalization,
                 paidAmountWei: msg.value,
                 rabbitHash: rabbitHash
@@ -168,7 +175,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
             Strings.toString(artistId), "/",
             Strings.toString(blockHeight), "/",
             Strings.toString(order), "/",
-            Strings.toString(_color)
+            Strings.toString(_color1), "/",
+            Strings.toString(_color2), "/",
+            Strings.toString(_color3)
         );
 
         // mint the stone

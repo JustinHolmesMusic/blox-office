@@ -70,7 +70,9 @@ contract SetStoneTests is Test {
             artistId,
             blockHeight,
             order,
-            0, // color
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -80,7 +82,9 @@ contract SetStoneTests is Test {
             artistId,
             blockHeight,
             order,
-            1, // color
+            4, // color1
+            5, // color2
+            6, // color3
             "crystalized stone 2",
             "rabbit2"
         );
@@ -102,7 +106,9 @@ contract SetStoneTests is Test {
             bytes32(abi.encodePacked(artistId, blockHeight))
         );
         assertEq(stones[0].order, order);
-        assertEq(stones[0].color, 0);
+        assertEq(stones[0].color1, 0);
+        assertEq(stones[0].color2, 1);
+        assertEq(stones[0].color3, 2);
         assertEq(stones[0].crystalization, "crystalized");
         assertEq(stones[0].paidAmountWei, 0.5 ether);
         assertEq(stones[0].rabbitHash, keccak256(abi.encodePacked("rabbit1")));
@@ -113,7 +119,9 @@ contract SetStoneTests is Test {
             bytes32(abi.encodePacked(artistId, blockHeight))
         );
         assertEq(stones[1].order, order);
-        assertEq(stones[1].color, 1);
+        assertEq(stones[1].color1, 4);
+        assertEq(stones[1].color2, 5);
+        assertEq(stones[1].color3, 6);
         assertEq(stones[1].crystalization, "crystalized stone 2");
         assertEq(stones[1].paidAmountWei, 1 ether);
         assertEq(stones[1].rabbitHash, keccak256(abi.encodePacked("rabbit2")));
@@ -133,14 +141,13 @@ contract SetStoneTests is Test {
         assertEq(stoneToken1.showBytes, bytes32(abi.encodePacked(artistId, blockHeight)));
         assertEq(stoneToken0.order, order);
         assertEq(stoneToken1.order, order);
-        assertEq(stoneToken0.color, 0);
-        assertEq(stoneToken1.color, 1);
-
+        assertEq(stoneToken0.color1, 0);
         // check that Stone with non-existing tokenId is an uninitialized Stone struct
         SetStone.Stone memory emptyStone = stone_contract.getStoneByTokenId(2);
         assertEq(emptyStone.showBytes, 0);
         assertEq(emptyStone.order, 0);
-        assertEq(emptyStone.color, 0);
+        assertEq(emptyStone.color1, 0);
+        assertEq(emptyStone.color2, 0);
         assertEq(emptyStone.crystalization, "");
         assertEq(emptyStone.paidAmountWei, 0);
         assertEq(emptyStone.rabbitHash, 0);
@@ -151,7 +158,9 @@ contract SetStoneTests is Test {
             artistId,
             blockHeight,
             1, // order
-            0, // color
+            7, // color1
+            8, // color2
+            9, // color3
             "crystalized", // crystalization text
             "rabbit3" // rabbit secret
         );
@@ -162,7 +171,9 @@ contract SetStoneTests is Test {
             artistId,
             blockHeight + 1,
             0, // order
-            0, // color
+            7, // color1
+            7, // color2
+            7, // color3
             "crystalized", // crystalization text
             "rabbit5" // rabbit secret
         );
@@ -181,6 +192,8 @@ contract SetStoneTests is Test {
             420,
             0, // order
             0, // color
+            1, // color
+            2, // color
             "crystalized", // crystalization text
             "invalid_rabbit" // invalid rabbit secret
         );
@@ -194,8 +207,10 @@ contract SetStoneTests is Test {
             address(this),
             0,
             420,
-            2,
-            0,
+            2, // order
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized",
             "rabbit1"
         );
@@ -207,7 +222,9 @@ contract SetStoneTests is Test {
             0,
             571, // non-existing LiveSet (0, 571)
             0,
-            0,
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -224,7 +241,9 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            1,
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -235,23 +254,13 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            1, // color already taken
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit2" // rabbit secret
         );
 
-        // The number of valid colors is equal to the number of rabbit hashes in show, which is 4 in our case
-        // so the valid colors are 0, 1, 2, 3
-        vm.expectRevert("The color must not be greater than the number of all mintable stones");
-        stone_contract.mintStone{value: 1 ether}(
-            address(this),
-            0,
-            420,
-            0,
-            5, // too high color
-            "crystalized",
-            "rabbit2"
-        );
     }
 
     function test_only_one_stone_per_secret_rabbit() public {
@@ -261,7 +270,9 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            0, // color
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -272,7 +283,9 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            1, // color
+            1, // color1
+            2, // color2
+            3, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -284,7 +297,9 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            1, // color
+            1, // color1
+            2, // color2
+            3, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );
@@ -294,19 +309,21 @@ contract SetStoneTests is Test {
             0,
             421,
             1, // order
-            0, // color
+            0, // color1
+            1, // color2
+            2, // color3
             "crystalized", // crystalization text
             "rabbit7" // rabbit secret
         );
 
         // Check the token URI of the minted stone
-        string memory expectedTokenURI = "https://justinholmes.com/setstones/0/420/0/1";
+        string memory expectedTokenURI = "https://justinholmes.com/setstones/0/420/0/1/2/3";
         uint256 tokenID = 0;
         string memory actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
 
 
-        expectedTokenURI = "https://justinholmes.com/setstones/0/421/1/0";
+        expectedTokenURI = "https://justinholmes.com/setstones/0/421/1/0/1/2";
         tokenID = 1;
         actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
@@ -319,7 +336,9 @@ contract SetStoneTests is Test {
             0,
             420,
             0, // order
-            1, // color
+            1, // color1
+            2, // color2
+            3, // color3
             "crystalized", // crystalization text
             "rabbit1" // rabbit secret
         );

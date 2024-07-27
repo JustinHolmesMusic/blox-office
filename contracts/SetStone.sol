@@ -116,6 +116,104 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
 
+    function generateTokenURI(uint16 artistId, uint64 blockHeight, uint8 order, uint16 color1, uint16 color2, uint16 color3) public pure returns (string memory) {
+        return string.concat(
+            Strings.toString(artistId), "/",
+            Strings.toString(blockHeight), "/",
+            Strings.toString(order), "/",
+            Strings.toString(color1), "/",
+            Strings.toString(color2), "/",
+            Strings.toString(color3)
+        );
+    }
+
+
+    function isColorAvailable(
+        uint16 color1,
+        uint16 color2,
+        uint16 color3,
+        bytes32 setId
+    ) public view returns (bool) {
+        // The color must not be already taken for the given set
+        // Iterate through all the setStones and check the color
+
+        Stone[] memory stonesForSet = stonesBySetId[setId];
+        for (uint i = 0; i < stonesForSet.length; i++) {
+            if (stonesForSet[i].color1 == color1 && stonesForSet[i].color2 == color2 && stonesForSet[i].color3 == color3) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function _mintStone(
+        address to,
+        uint16 artistId,
+        uint64 blockHeight,
+        uint8 order,
+        uint16 _color1,
+        uint16 _color2,
+        uint16 _color3,
+        string memory _crystalization,
+        bytes32 showBytes,
+        bytes32 setId,
+        bytes32 rabbitHash
+    ) internal {
+
+        // create the stone by adding it to the stones array
+        stonesBySetId[setId].push(
+            Stone({
+                showBytes: showBytes,
+                order: order,
+                color1: _color1,
+                color2: _color2,
+                color3: _color3,
+                crystalization: _crystalization,
+                paidAmountWei: msg.value,
+                rabbitHash: rabbitHash
+            })
+        );
+
+        stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
+
+        // compute the tokenURI
+        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
+
+        // mint the stone
+        _mint(to, numberOfStonesMinted);
+        _setTokenURI(numberOfStonesMinted, token_uri);
+        _burnRabbitHash(showBytes, rabbitHash);
+        numberOfStonesMinted += 1;
+    }
+
+    function mintStoneForFree(
+        address to,
+        uint16 artistId,
+        uint64 blockHeight,
+        uint8 order,
+        uint16 _color1,
+        uint16 _color2,
+        uint16 _color3,
+        string memory _crystalization,
+        string memory _rabbit_secret
+    ) external onlyOwner {
+        bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
+
+        // check that the set exists and that the order is valid
+        require(numberOfSetsInShow[showBytes] > order, "Set does not exist");
+
+        // check that the secretRabbit is a valid secret for a given set
+        bytes32 rabbitHash = keccak256(abi.encodePacked(_rabbit_secret));
+        require(isValidRabbit(rabbitHash, showBytes), "Invalid secret rabbit");
+
+
+        // --- Color checks ---
+        bytes32 setId = getSetId(artistId, blockHeight, order);
+        require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
+
+        _mintStone(to, artistId, blockHeight, order, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash);
+    }
+
     function mintStone(
         address to,
         uint16 artistId,
@@ -144,47 +242,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         // --- Color checks ---
         bytes32 setId = getSetId(artistId, blockHeight, order);
-        // The color must not be already taken for the given set
-        // Iterate through all the setStones and check the color
-        Stone[] memory stonesForSet = stonesBySetId[setId];
-        for (uint i = 0; i < stonesForSet.length; i++) {
-            require(stonesForSet[i].color1 != _color1 || 
-            stonesForSet[i].color2 != _color2 || 
-            stonesForSet[i].color3 != _color3, "Color already taken for this set");
-        }
-
-        // create the stone by adding it to the stones array
-        stonesBySetId[setId].push(
-            Stone({
-                showBytes: showBytes,
-                order: order,
-                color1: _color1,
-                color2: _color2,
-                color3: _color3,
-                crystalization: _crystalization,
-                paidAmountWei: msg.value,
-                rabbitHash: rabbitHash
-            })
-        );
-
-        stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
-
-        // compute the tokenURI
-        // string memory tokenURI = string.concat(baseURI, "/", Strings.toString(numberOfStonesMinted));
-        string memory token_uri = string.concat(
-            Strings.toString(artistId), "/",
-            Strings.toString(blockHeight), "/",
-            Strings.toString(order), "/",
-            Strings.toString(_color1), "/",
-            Strings.toString(_color2), "/",
-            Strings.toString(_color3)
-        );
-
-        // mint the stone
-        _mint(to, numberOfStonesMinted);
-        _setTokenURI(numberOfStonesMinted, token_uri);
-        _burnRabbitHash(showBytes, rabbitHash);
-        numberOfStonesMinted += 1;
+        require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
+        _mintStone(to, artistId, blockHeight, order, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash);
     }
 
     function withdraw() external onlyOwner {

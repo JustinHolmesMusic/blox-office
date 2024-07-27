@@ -365,4 +365,27 @@ contract SetStoneTests is Test {
         assertEq(rabbitHashes2.length, 4, "Show2 number of rabbit hashes does not match");
     }
 
+    function test_mint_stone_for_free() public {
+        stone_contract.mintStoneForFree(
+            address(this),
+            0,
+            420,
+            0, // order
+            0, // color1
+            1, // color2
+            2, // color3
+            "crystalized", // crystalization text
+            "rabbit1" // rabbit secret
+        );
+
+        // check that the stone has been minted
+        SetStone.Stone memory mintedStone = stone_contract.getStoneByTokenId(0);
+
+        assertEq(mintedStone.color1, 0, "Minted stone color1 does not match");
+        assertEq(mintedStone.color2, 1, "Minted stone color2 does not match");
+        assertEq(mintedStone.color3, 2, "Minted stone color3 does not match");
+        assertEq(mintedStone.crystalization, "crystalized", "Minted stone crystalization does not match");
+        assertEq(mintedStone.rabbitHash, keccak256(abi.encodePacked("rabbit1")), "Minted stone rabbit hash does not match");
+
+    }
 }

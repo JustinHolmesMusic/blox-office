@@ -93,34 +93,35 @@ contract SetStoneTests is Test {
         // check that the balance of the address is 1.5 ether
         assertEq(address(stone_contract).balance, 1.5 ether);
 
+
         // check that the stone has the correct attributes
-        SetStone.Stone[] memory stones = stone_contract.getStonesBySetId(
+        uint256[] memory stoneIds = stone_contract.getStonesBySetId(
             artistId,
             blockHeight,
             order
         );
 
-        assertEq(stones.length, 2);
-        assertEq(stones[0].artistId, artistId);
-        assertEq(stones[0].blockHeight, blockHeight);
-        assertEq(stones[0].order, order);
-        assertEq(stones[0].color1, 0);
-        assertEq(stones[0].color2, 1);
-        assertEq(stones[0].color3, 2);
-        assertEq(stones[0].crystalization, "crystalized");
-        assertEq(stones[0].paidAmountWei, 0.5 ether);
-        assertEq(stones[0].rabbitHash, keccak256(abi.encodePacked("rabbit1")));
+        assertEq(stoneIds.length, 2);
+        SetStone.StoneColor memory stone1_color = stone_contract.getStoneColor(stoneIds[0]);
+        string memory stone1_crystalization = stone_contract.getCrystalizationMsg(stoneIds[0]);
+        uint256 stone1_paidAmountWei = stone_contract.getPaidAmountWei(stoneIds[0]);
 
+        assertEq(stone1_color.color1, 0);
+        assertEq(stone1_color.color2, 1);
+        assertEq(stone1_color.color3, 2);
+        assertEq(stone1_crystalization, "crystalized");
+        assertEq(stone1_paidAmountWei, 0.5 ether);
 
-        assertEq(stones[1].artistId, artistId);
-        assertEq(stones[1].blockHeight, blockHeight);
-        assertEq(stones[1].order, order);
-        assertEq(stones[1].color1, 4);
-        assertEq(stones[1].color2, 5);
-        assertEq(stones[1].color3, 6);
-        assertEq(stones[1].crystalization, "crystalized stone 2");
-        assertEq(stones[1].paidAmountWei, 1 ether);
-        assertEq(stones[1].rabbitHash, keccak256(abi.encodePacked("rabbit2")));
+        SetStone.StoneColor memory stone2_color = stone_contract.getStoneColor(stoneIds[1]);
+        string memory stone2_crystalization = stone_contract.getCrystalizationMsg(stoneIds[1]);
+        uint256 stone2_paidAmountWei = stone_contract.getPaidAmountWei(stoneIds[1]);
+
+        assertEq(stone2_color.color1, 4);
+        assertEq(stone2_color.color2, 5);
+        assertEq(stone2_color.color3, 6);
+        assertEq(stone2_crystalization, "crystalized stone 2");
+        assertEq(stone2_paidAmountWei, 1 ether);
+
 
         // check that the NFT has been properly minted
         assertEq(stone_contract.ownerOf(0), address(this));
@@ -130,26 +131,12 @@ contract SetStoneTests is Test {
         assertEq(stone_contract.tokenOfOwnerByIndex(address(this), 0), 0);
         assertEq(stone_contract.tokenOfOwnerByIndex(address(this), 1), 1);
 
-        SetStone.Stone memory stoneToken0 = stone_contract.getStoneByTokenId(0);
-        SetStone.Stone memory stoneToken1 = stone_contract.getStoneByTokenId(1);
-
-        assertEq(stoneToken0.artistId, artistId);
-        assertEq(stoneToken0.blockHeight, blockHeight);
-        assertEq(stoneToken1.artistId, artistId);
-        assertEq(stoneToken1.blockHeight, blockHeight);
-        assertEq(stoneToken0.order, order);
-        assertEq(stoneToken1.order, order);
-        assertEq(stoneToken0.color1, 0);
         // check that Stone with non-existing tokenId is an uninitialized Stone struct
-        SetStone.Stone memory emptyStone = stone_contract.getStoneByTokenId(2);
-        assertEq(emptyStone.artistId, 0);
-        assertEq(emptyStone.blockHeight, 0);
-        assertEq(emptyStone.order, 0);
-        assertEq(emptyStone.color1, 0);
-        assertEq(emptyStone.color2, 0);
-        assertEq(emptyStone.crystalization, "");
-        assertEq(emptyStone.paidAmountWei, 0);
-        assertEq(emptyStone.rabbitHash, 0);
+        SetStone.StoneColor memory non_existent_stone = stone_contract.getStoneColor(1234);
+        assertEq(non_existent_stone.color1, 0);
+        assertEq(non_existent_stone.color2, 0);
+        assertEq(non_existent_stone.color3, 0);
+
 
         // mint one more stone for the second set
         stone_contract.mintStone{value: 1 ether}(
@@ -345,17 +332,15 @@ contract SetStoneTests is Test {
 
     function test_get_show_data() public {
         // Act
-        (bytes32 showBytes1, uint16 stonesPossible1, uint8 numberOfSets1, uint256 stonePrice1, bytes32[] memory rabbitHashes1, uint8[] memory setShapes1) = stone_contract.getShowData(0, 420);
-        (bytes32 showBytes2, uint16 stonesPossible2, uint8 numberOfSets2, uint256 stonePrice2, bytes32[] memory rabbitHashes2, uint8[] memory setShapes2) = stone_contract.getShowData(0, 421);
+        (bytes32 showBytes1, uint8 numberOfSets1, uint256 stonePrice1, bytes32[] memory rabbitHashes1, uint8[] memory setShapes1) = stone_contract.getShowData(0, 420);
+        (bytes32 showBytes2, uint8 numberOfSets2, uint256 stonePrice2, bytes32[] memory rabbitHashes2, uint8[] memory setShapes2) = stone_contract.getShowData(0, 421);
 
         // Assert for Show1
-        assertEq(stonesPossible1, 4, "Show1 number of stones possible does not match");
         assertEq(numberOfSets1, 2, "Show1 number of sets does not match");
         assertEq(stonePrice1, 0.5 ether, "Show1 stone price does not match");
         assertEq(setShapes1.length, 2, "Show1 number of set shapes does not match");
 
         // Assert for Show2
-        assertEq(stonesPossible2, 4, "Show2 number of stones possible does not match");
         assertEq(numberOfSets2, 2, "Show2 number of sets does not match");
         assertEq(stonePrice2, 0.5 ether, "Show2 stone price does not match");
         assertEq(setShapes2.length, 2, "Show2 number of set shapes does not match");
@@ -377,14 +362,40 @@ contract SetStoneTests is Test {
             "rabbit1" // rabbit secret
         );
 
-        // check that the stone has been minted
-        SetStone.Stone memory mintedStone = stone_contract.getStoneByTokenId(0);
+        // check that the stone has the correct attributes
+        uint256[] memory stoneIds = stone_contract.getStonesBySetId(0, 420, 0);
 
-        assertEq(mintedStone.color1, 0, "Minted stone color1 does not match");
-        assertEq(mintedStone.color2, 1, "Minted stone color2 does not match");
-        assertEq(mintedStone.color3, 2, "Minted stone color3 does not match");
-        assertEq(mintedStone.crystalization, "crystalized", "Minted stone crystalization does not match");
-        assertEq(mintedStone.rabbitHash, keccak256(abi.encodePacked("rabbit1")), "Minted stone rabbit hash does not match");
+        assertEq(stoneIds.length, 1);
+        SetStone.StoneColor memory stone1_color = stone_contract.getStoneColor(stoneIds[0]);
+        string memory stone1_crystalization = stone_contract.getCrystalizationMsg(stoneIds[0]);
+        uint256 stone1_paidAmountWei = stone_contract.getPaidAmountWei(stoneIds[0]);
 
+        assertEq(stone1_color.color1, 0);
+        assertEq(stone1_color.color2, 1);
+        assertEq(stone1_color.color3, 2);
+        assertEq(stone1_crystalization, "crystalized");
+        assertEq(stone1_paidAmountWei, 0 ether);
+
+        assertEq(stone1_color.color1, 0, "Minted stone color1 does not match");
+        assertEq(stone1_color.color2, 1, "Minted stone color2 does not match");
+        assertEq(stone1_color.color3, 2, "Minted stone color3 does not match");
+        assertEq(stone1_crystalization, "crystalized", "Minted stone crystalization does not match");
+
+    }
+
+    function test_mint_stone_minimal() public {
+
+        vm.deal(address(this), 10 ether);
+        stone_contract.mintStone{value: 0.5 ether}(
+            address(this),
+            0, // artist id
+            420, // blockheight
+            0, // order
+            0, // color1
+            1, // color2
+            2, // color3
+            "", // crystalization text
+            "rabbit1" // rabbit secret
+        );
     }
 }

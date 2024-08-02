@@ -12,26 +12,21 @@ import "./ILiveSet.sol";
 contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
 
-    struct Stone {
-        uint16 artistId;
-        uint64 blockHeight;
-        uint8 order;
+    struct StoneColor {
         uint16 color1;
         uint16 color2;
         uint16 color3;
-
-        string crystalization; // personal message
-        uint256 paidAmountWei;
-        bytes32 rabbitHash;
     }
 
     uint256 public numberOfStonesMinted;
 
-    mapping(bytes32 => Stone[]) public stonesBySetId;
-    mapping(uint256 => Stone) public stonesByTokenId;
+    mapping(bytes32 => uint256[]) public stonesBySetId;
+    mapping(uint256 => StoneColor) public stoneColorByTokenId;
+    mapping(uint256 => string) public crystalizationMsgByTokenId;
+    mapping(uint256 => uint256) public paidAmountWeiByTokenId;
+
 
     mapping(bytes32 => bytes32[]) public rabbitHashesByShow;
-    mapping(bytes32 => uint16) public stonesPossiblePerShow;
     mapping(bytes32 => uint8) public numberOfSetsInShow;
     mapping(bytes32 => uint8[]) public setShapes;
     mapping(bytes32 => uint256) public stonePriceByShow; // Someday, 0 might mean "auction" or "free" or "donation" or "not for sale"
@@ -43,9 +38,21 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         baseURI = base_uri;
     }
 
-    function getShowData(uint16 artist_id, uint64 blockheight) public view returns (bytes32, uint16, uint8, uint256, bytes32[] memory, uint8[] memory) {
+    function getStoneColor(uint256 tokenId) public view returns (StoneColor memory) {
+        return stoneColorByTokenId[tokenId];
+    }
+
+    function getCrystalizationMsg(uint256 tokenId) public view returns (string memory) {
+        return crystalizationMsgByTokenId[tokenId];
+    }
+
+    function getPaidAmountWei(uint256 tokenId) public view returns (uint256) {
+        return paidAmountWeiByTokenId[tokenId];
+    }
+
+    function getShowData(uint16 artist_id, uint64 blockheight) public view returns (bytes32, uint8, uint256, bytes32[] memory, uint8[] memory) {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id, blockheight));
-        return (showBytes, stonesPossiblePerShow[showBytes], numberOfSetsInShow[showBytes], stonePriceByShow[showBytes], rabbitHashesByShow[showBytes], setShapes[showBytes]);
+        return (showBytes, numberOfSetsInShow[showBytes], stonePriceByShow[showBytes], rabbitHashesByShow[showBytes], setShapes[showBytes]);
     }
 
     function makeShowAvailableForStoneMinting(uint16 artist_id,
@@ -53,7 +60,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32[] memory rabbitHashes,
         uint8 numberOfSets,
         uint8[] memory shapes,
-        uint256 stonePrice) public {
+        uint256 stonePrice) public onlyOwner {
 
         // Check that number of sets match length of shapes array.
         require(numberOfSets == shapes.length, "Number of sets must match length of shapes array");
@@ -63,7 +70,6 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id,
             blockheight));
         rabbitHashesByShow[showBytes] = rabbitHashes;
-        stonesPossiblePerShow[showBytes] = uint16(rabbitHashes.length);
 
         numberOfSetsInShow[showBytes] = numberOfSets;
         setShapes[showBytes] = shapes;
@@ -104,16 +110,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return bytes32(abi.encodePacked(artistId, blockHeight, order));
     }
 
-    function getStonesBySetIdBytes(bytes32 setId) public view returns (Stone[] memory) {
-        return stonesBySetId[setId];
-    }
 
-    function getStonesBySetId(uint16 artistId, uint64 blockHeight, uint8 order) public view returns (Stone[] memory) {
+    function getStonesBySetId(uint16 artistId, uint64 blockHeight, uint8 order) public view returns (uint256[] memory) {
         return stonesBySetId[getSetId(artistId, blockHeight, order)];
-    }
-
-    function getStoneByTokenId(uint256 tokenId) public view returns (Stone memory) {
-        return stonesByTokenId[tokenId];
     }
 
 
@@ -136,11 +135,13 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32 setId
     ) public view returns (bool) {
         // The color must not be already taken for the given set
+
+        uint256[] memory stonesForSet = stonesBySetId[setId];
+
         // Iterate through all the setStones and check the color
 
-        Stone[] memory stonesForSet = stonesBySetId[setId];
         for (uint i = 0; i < stonesForSet.length; i++) {
-            if (stonesForSet[i].color1 == color1 && stonesForSet[i].color2 == color2 && stonesForSet[i].color3 == color3) {
+            if (stoneColorByTokenId[stonesForSet[i]].color1 == color1 && stoneColorByTokenId[stonesForSet[i]].color2 == color2 && stoneColorByTokenId[stonesForSet[i]].color3 == color3) {
                 return false;
             }
         }
@@ -149,37 +150,28 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function _mintStone(
         address to,
-        uint16 artistId,
-        uint64 blockHeight,
-        uint8 order,
         uint16 _color1,
         uint16 _color2,
         uint16 _color3,
         string memory _crystalization,
         bytes32 showBytes,
         bytes32 setId,
-        bytes32 rabbitHash
+        bytes32 rabbitHash,
+        string memory token_uri,
+        uint256 paidAmountWei
     ) internal {
 
+
         // create the stone by adding it to the stones array
-        stonesBySetId[setId].push(
-            Stone({
-                artistId: artistId,
-                blockHeight: blockHeight,
-                order: order,
-                color1: _color1,
-                color2: _color2,
-                color3: _color3,
-                crystalization: _crystalization,
-                paidAmountWei: msg.value,
-                rabbitHash: rabbitHash
-            })
-        );
+        stonesBySetId[setId].push(numberOfStonesMinted);
+        stoneColorByTokenId[numberOfStonesMinted] = StoneColor({
+            color1: _color1,
+            color2: _color2,
+            color3: _color3
+        });
+        crystalizationMsgByTokenId[numberOfStonesMinted] = _crystalization;
+        paidAmountWeiByTokenId[numberOfStonesMinted] = paidAmountWei;
 
-        stonesByTokenId[numberOfStonesMinted] = stonesBySetId[setId][stonesBySetId[setId].length - 1];
-
-        // compute the tokenURI
-        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
 
         // mint the stone
         _mint(to, numberOfStonesMinted);
@@ -213,7 +205,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32 setId = getSetId(artistId, blockHeight, order);
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
 
-        _mintStone(to, artistId, blockHeight, order, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash);
+        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
+        _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, 0);
     }
 
     function mintStone(
@@ -245,7 +238,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // --- Color checks ---
         bytes32 setId = getSetId(artistId, blockHeight, order);
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
-        _mintStone(to, artistId, blockHeight, order, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash);
+
+        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
+        _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, msg.value);
     }
 
     function withdraw() external onlyOwner {

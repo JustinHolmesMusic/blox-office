@@ -101,10 +101,8 @@ contract SetStoneTests is Test {
         );
 
         assertEq(stones.length, 2);
-        assertEq(
-            stones[0].showBytes,
-            bytes32(abi.encodePacked(artistId, blockHeight))
-        );
+        assertEq(stones[0].artistId, artistId);
+        assertEq(stones[0].blockHeight, blockHeight);
         assertEq(stones[0].order, order);
         assertEq(stones[0].color1, 0);
         assertEq(stones[0].color2, 1);
@@ -114,10 +112,8 @@ contract SetStoneTests is Test {
         assertEq(stones[0].rabbitHash, keccak256(abi.encodePacked("rabbit1")));
 
 
-        assertEq(
-            stones[1].showBytes,
-            bytes32(abi.encodePacked(artistId, blockHeight))
-        );
+        assertEq(stones[1].artistId, artistId);
+        assertEq(stones[1].blockHeight, blockHeight);
         assertEq(stones[1].order, order);
         assertEq(stones[1].color1, 4);
         assertEq(stones[1].color2, 5);
@@ -137,14 +133,17 @@ contract SetStoneTests is Test {
         SetStone.Stone memory stoneToken0 = stone_contract.getStoneByTokenId(0);
         SetStone.Stone memory stoneToken1 = stone_contract.getStoneByTokenId(1);
 
-        assertEq(stoneToken0.showBytes, bytes32(abi.encodePacked(artistId, blockHeight)));
-        assertEq(stoneToken1.showBytes, bytes32(abi.encodePacked(artistId, blockHeight)));
+        assertEq(stoneToken0.artistId, artistId);
+        assertEq(stoneToken0.blockHeight, blockHeight);
+        assertEq(stoneToken1.artistId, artistId);
+        assertEq(stoneToken1.blockHeight, blockHeight);
         assertEq(stoneToken0.order, order);
         assertEq(stoneToken1.order, order);
         assertEq(stoneToken0.color1, 0);
         // check that Stone with non-existing tokenId is an uninitialized Stone struct
         SetStone.Stone memory emptyStone = stone_contract.getStoneByTokenId(2);
-        assertEq(emptyStone.showBytes, 0);
+        assertEq(emptyStone.artistId, 0);
+        assertEq(emptyStone.blockHeight, 0);
         assertEq(emptyStone.order, 0);
         assertEq(emptyStone.color1, 0);
         assertEq(emptyStone.color2, 0);

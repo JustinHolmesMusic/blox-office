@@ -13,7 +13,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
 
     struct Stone {
-        bytes32 showBytes;
+        uint16 artistId;
+        uint64 blockHeight;
         uint8 order;
         uint16 color1;
         uint16 color2;
@@ -103,7 +104,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return bytes32(abi.encodePacked(artistId, blockHeight, order));
     }
 
-    function getStonesBySetId(bytes32 setId) public view returns (Stone[] memory) {
+    function getStonesBySetIdBytes(bytes32 setId) public view returns (Stone[] memory) {
         return stonesBySetId[setId];
     }
 
@@ -163,7 +164,8 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         // create the stone by adding it to the stones array
         stonesBySetId[setId].push(
             Stone({
-                showBytes: showBytes,
+                artistId: artistId,
+                blockHeight: blockHeight,
                 order: order,
                 color1: _color1,
                 color2: _color2,

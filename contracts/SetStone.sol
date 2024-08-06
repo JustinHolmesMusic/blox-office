@@ -116,18 +116,6 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
 
-    function generateTokenURI(uint16 artistId, uint64 blockHeight, uint8 order, uint16 color1, uint16 color2, uint16 color3) public pure returns (string memory) {
-        return string.concat(
-            Strings.toString(artistId), "/",
-            Strings.toString(blockHeight), "/",
-            Strings.toString(order), "/",
-            Strings.toString(color1), "/",
-            Strings.toString(color2), "/",
-            Strings.toString(color3)
-        );
-    }
-
-
     function isColorAvailable(
         uint16 color1,
         uint16 color2,
@@ -205,7 +193,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32 setId = getSetId(artistId, blockHeight, order);
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
 
-        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
+        string memory token_uri = Strings.toString(numberOfStonesMinted);
         _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, 0);
     }
 
@@ -239,7 +227,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         bytes32 setId = getSetId(artistId, blockHeight, order);
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
 
-        string memory token_uri = generateTokenURI(artistId, blockHeight, order, _color1, _color2, _color3);
+        string memory token_uri = Strings.toString(numberOfStonesMinted);
         _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, msg.value);
     }
 

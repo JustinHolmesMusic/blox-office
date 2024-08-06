@@ -303,13 +303,13 @@ contract SetStoneTests is Test {
         );
 
         // Check the token URI of the minted stone
-        string memory expectedTokenURI = "https://justinholmes.com/setstones/0/420/0/1/2/3";
+        string memory expectedTokenURI = "https://justinholmes.com/setstones/0";
         uint256 tokenID = 0;
         string memory actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");
 
 
-        expectedTokenURI = "https://justinholmes.com/setstones/0/421/1/0/1/2";
+        expectedTokenURI = "https://justinholmes.com/setstones/1";
         tokenID = 1;
         actualTokenURI = stone_contract.tokenURI(tokenID);
         assertEq(actualTokenURI, expectedTokenURI, "Token URI does not match the expected value");

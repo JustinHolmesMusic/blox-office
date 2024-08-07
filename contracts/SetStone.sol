@@ -24,6 +24,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     mapping(uint256 => StoneColor) public stoneColorByTokenId;
     mapping(uint256 => string) public crystalizationMsgByTokenId;
     mapping(uint256 => uint256) public paidAmountWeiByTokenId;
+    mapping(uint256 => uint8) public favoriteSongByTokenId;
 
 
     mapping(bytes32 => bytes32[]) public rabbitHashesByShow;
@@ -48,6 +49,10 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function getPaidAmountWei(uint256 tokenId) public view returns (uint256) {
         return paidAmountWeiByTokenId[tokenId];
+    }
+
+    function getFavoriteSong(uint256 tokenId) public view returns (uint8) {
+        return favoriteSongByTokenId[tokenId];
     }
 
     function getShowData(uint16 artist_id, uint64 blockheight) public view returns (bytes32, uint8, uint256, bytes32[] memory, uint8[] memory) {
@@ -142,6 +147,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint16 _color2,
         uint16 _color3,
         string memory _crystalization,
+        uint8 _favoriteSong,
         bytes32 showBytes,
         bytes32 setId,
         bytes32 rabbitHash,
@@ -159,7 +165,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         });
         crystalizationMsgByTokenId[numberOfStonesMinted] = _crystalization;
         paidAmountWeiByTokenId[numberOfStonesMinted] = paidAmountWei;
-
+        favoriteSongByTokenId[numberOfStonesMinted] = _favoriteSong;
 
         // mint the stone
         _mint(to, numberOfStonesMinted);
@@ -177,6 +183,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint16 _color2,
         uint16 _color3,
         string memory _crystalization,
+        uint8 _favoriteSong,
         string memory _rabbit_secret
     ) external onlyOwner {
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
@@ -194,7 +201,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
 
         string memory token_uri = Strings.toString(numberOfStonesMinted);
-        _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, 0);
+        _mintStone(to, _color1, _color2, _color3, _crystalization, _favoriteSong, showBytes, setId, rabbitHash, token_uri, 0);
     }
 
     function mintStone(
@@ -206,6 +213,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint16 _color2,
         uint16 _color3,
         string memory _crystalization,
+        uint8 _favoriteSong,
         string memory _rabbit_secret
     ) external payable {
         bytes32 showBytes = bytes32(abi.encodePacked(artistId, blockHeight));
@@ -228,7 +236,7 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(isColorAvailable(_color1, _color2, _color3, setId), "Color already taken for this set");
 
         string memory token_uri = Strings.toString(numberOfStonesMinted);
-        _mintStone(to, _color1, _color2, _color3, _crystalization, showBytes, setId, rabbitHash, token_uri, msg.value);
+        _mintStone(to, _color1, _color2, _color3, _crystalization, _favoriteSong, showBytes, setId, rabbitHash, token_uri, msg.value);
     }
 
     function withdraw() external onlyOwner {

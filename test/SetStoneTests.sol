@@ -74,6 +74,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
 
@@ -86,6 +87,7 @@ contract SetStoneTests is Test {
             5, // color2
             6, // color3
             "crystalized stone 2",
+            1, // favorite song
             "rabbit2"
         );
 
@@ -105,22 +107,26 @@ contract SetStoneTests is Test {
         SetStone.StoneColor memory stone1_color = stone_contract.getStoneColor(stoneIds[0]);
         string memory stone1_crystalization = stone_contract.getCrystalizationMsg(stoneIds[0]);
         uint256 stone1_paidAmountWei = stone_contract.getPaidAmountWei(stoneIds[0]);
+        uint8 stone1_favoriteSong = stone_contract.getFavoriteSong(stoneIds[0]);
 
         assertEq(stone1_color.color1, 0);
         assertEq(stone1_color.color2, 1);
         assertEq(stone1_color.color3, 2);
         assertEq(stone1_crystalization, "crystalized");
         assertEq(stone1_paidAmountWei, 0.5 ether);
+        assertEq(stone1_favoriteSong, 0);
 
         SetStone.StoneColor memory stone2_color = stone_contract.getStoneColor(stoneIds[1]);
         string memory stone2_crystalization = stone_contract.getCrystalizationMsg(stoneIds[1]);
         uint256 stone2_paidAmountWei = stone_contract.getPaidAmountWei(stoneIds[1]);
+        uint8 stone2_favoriteSong = stone_contract.getFavoriteSong(stoneIds[1]);
 
         assertEq(stone2_color.color1, 4);
         assertEq(stone2_color.color2, 5);
         assertEq(stone2_color.color3, 6);
         assertEq(stone2_crystalization, "crystalized stone 2");
         assertEq(stone2_paidAmountWei, 1 ether);
+        assertEq(stone2_favoriteSong, 1);
 
 
         // check that the NFT has been properly minted
@@ -148,6 +154,7 @@ contract SetStoneTests is Test {
             8, // color2
             9, // color3
             "crystalized", // crystalization text
+            2, // favorite song
             "rabbit3" // rabbit secret
         );
 
@@ -161,6 +168,7 @@ contract SetStoneTests is Test {
             7, // color2
             7, // color3
             "crystalized", // crystalization text
+            3, // favorite song
             "rabbit5" // rabbit secret
         );
 
@@ -181,6 +189,7 @@ contract SetStoneTests is Test {
             1, // color
             2, // color
             "crystalized", // crystalization text
+            0, // favorite song
             "invalid_rabbit" // invalid rabbit secret
         );
 
@@ -198,6 +207,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized",
+            0, // favorite song
             "rabbit1"
         );
 
@@ -212,6 +222,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
     }
@@ -231,6 +242,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
 
@@ -244,6 +256,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit2" // rabbit secret
         );
 
@@ -260,6 +273,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
 
@@ -273,6 +287,7 @@ contract SetStoneTests is Test {
             2, // color2
             3, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
     }
@@ -287,6 +302,7 @@ contract SetStoneTests is Test {
             2, // color2
             3, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
 
@@ -299,6 +315,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit7" // rabbit secret
         );
 
@@ -326,6 +343,7 @@ contract SetStoneTests is Test {
             2, // color2
             3, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
     }
@@ -359,6 +377,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "crystalized", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
 
@@ -395,6 +414,7 @@ contract SetStoneTests is Test {
             1, // color2
             2, // color3
             "", // crystalization text
+            0, // favorite song
             "rabbit1" // rabbit secret
         );
     }

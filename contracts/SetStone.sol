@@ -26,10 +26,9 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     mapping(uint256 => uint256) public paidAmountWeiByTokenId;
     mapping(uint256 => uint8) public favoriteSongByTokenId;
 
-
     mapping(bytes32 => bytes32[]) public rabbitHashesByShow;
     mapping(bytes32 => uint8) public numberOfSetsInShow;
-    mapping(bytes32 => uint8[]) public setShapes;
+    mapping(bytes32 => uint8[]) public setShapeBySetId;
     mapping(bytes32 => uint256) public stonePriceByShow; // Someday, 0 might mean "auction" or "free" or "donation" or "not for sale"
 
     string public baseURI;
@@ -57,27 +56,28 @@ contract SetStone is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function getShowData(uint16 artist_id, uint64 blockheight) public view returns (bytes32, uint8, uint256, bytes32[] memory, uint8[] memory) {
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id, blockheight));
-        return (showBytes, numberOfSetsInShow[showBytes], stonePriceByShow[showBytes], rabbitHashesByShow[showBytes], setShapes[showBytes]);
+        return (showBytes, numberOfSetsInShow[showBytes], stonePriceByShow[showBytes], rabbitHashesByShow[showBytes], setShapeBySetId[showBytes]);
     }
 
-    function makeShowAvailableForStoneMinting(uint16 artist_id,
+    function makeShowAvailableForStoneMinting(
+        uint16 artist_id,
         uint64 blockheight,
         bytes32[] memory rabbitHashes,
         uint8 numberOfSets,
-        uint8[] memory shapes,
+        uint8[] memory shapesBySetNumber, // Shape number, ordered by set number.
         uint256 stonePrice) public onlyOwner {
 
         // Check that number of sets match length of shapes array.
-        require(numberOfSets == shapes.length, "Number of sets must match length of shapes array");
+        require(numberOfSets == shapesBySetNumber.length, "Number of sets must match length of shapes array");
 
 
-        // Authorized by artistID?
+        // TODO: Authorized by artistID?
         bytes32 showBytes = bytes32(abi.encodePacked(artist_id,
             blockheight));
         rabbitHashesByShow[showBytes] = rabbitHashes;
 
         numberOfSetsInShow[showBytes] = numberOfSets;
-        setShapes[showBytes] = shapes;
+        setShapeBySetId[showBytes] = shapesBySetNumber;
         stonePriceByShow[showBytes] = stonePrice;
     }
 
